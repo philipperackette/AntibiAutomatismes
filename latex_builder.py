@@ -16,7 +16,7 @@ def build_preambule(titre: str, classe: str, is_controle: bool) -> str:
 
     pre = r"\documentclass[12pt,a4paper,french]{article}" + "\n"
     pre += r"\usepackage[utf8]{inputenc}" + "\n"
-    pre += r"\usepackage{amsmath,lmodern,babel,geometry}" + "\n"
+    pre += r"\usepackage{amsmath,amssymb,lmodern,babel,geometry}" + "\n"
     pre += r"\usepackage{pgf,tikz}" + "\n"
     pre += r"\usepackage{tkz-tab}" + "\n"
     pre += r"\usepackage{fancyhdr}" + "\n"
