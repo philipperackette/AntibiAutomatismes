@@ -1,0 +1,145 @@
+{
+  "titre": "Entraînement de calcul",
+  "classe": "Classe à plusieurs niveaux",
+  "type": "Entraînement",
+  "nb_sujets": 5,
+  "corrige": "Après chaque sujet",
+  "qr_codes": "Oui",
+  "corrige_mode": "Complet",
+  "fichier": "/Users/professeurrackette/Desktop/sujet.tex",
+  "afficher_nom": false,
+  "afficher_consigne": false,
+  "consigne_texte": "La qualité de la rédaction entre en compte dans la notation",
+  "difficulty_filter_enabled": true,
+  "difficulty_z_center": 0.8,
+  "difficulty_z_tolerance": 0.2,
+  "difficulty_calibration_samples": 180,
+  "difficulty_max_attempts": 40,
+  "composition": [
+    {
+      "gen_id": "distributivite_5e",
+      "config": {
+        "nb_developper": 4,
+        "nb_factoriser": 4
+      }
+    },
+    {
+      "gen_id": "priorites_5e",
+      "config": {
+        "nb_questions": 6,
+        "avec_parentheses": "Oui"
+      }
+    },
+    {
+      "gen_id": "relatifs_somme_5e",
+      "config": {
+        "nb_questions": 8,
+        "nb_termes": 3,
+        "valeur_max": 20,
+        "avec_soustractions": "Mélange"
+      }
+    },
+    {
+      "gen_id": "developpement_3e",
+      "config": {
+        "nb_questions": 6,
+        "nb_simples": 2
+      }
+    },
+    {
+      "gen_id": "reduction_3e",
+      "config": {
+        "nb_questions": 5
+      }
+    },
+    {
+      "gen_id": "pythagore_3e",
+      "config": {
+        "nb_questions": 4
+      }
+    },
+    {
+      "gen_id": "thales_3e",
+      "config": {
+        "nb_questions": 4
+      }
+    },
+    {
+      "gen_id": "equations_3e",
+      "config": {
+        "nb_questions": 5,
+        "niveau": "Progressif"
+      }
+    },
+    {
+      "gen_id": "equations_produit_3e",
+      "config": {
+        "nb_questions": 4
+      }
+    },
+    {
+      "gen_id": "fractions_2nde",
+      "config": {
+        "nb_somme": 2,
+        "nb_prod_diff": 2,
+        "nb_imbriquee": 1
+      }
+    },
+    {
+      "gen_id": "factorisation_commun_2nde",
+      "config": {
+        "nb_questions": 3
+      }
+    },
+    {
+      "gen_id": "identites_remarquables_2nde",
+      "config": {
+        "nb_questions": 3,
+        "types": "Mixte"
+      }
+    },
+    {
+      "gen_id": "inequations_2nde",
+      "config": {
+        "nb_questions": 6,
+        "niveau_max": 3
+      }
+    },
+    {
+      "gen_id": "tableau_signes_2nde",
+      "config": {
+        "nb_questions": 4
+      }
+    },
+    {
+      "gen_id": "puissances_2nde",
+      "config": {
+        "nb_questions": 4
+      }
+    },
+    {
+      "gen_id": "racines_2nde",
+      "config": {
+        "nb_simplifier": 2,
+        "nb_combiner": 2,
+        "nb_radicaux": 1,
+        "nb_binome": 1
+      }
+    },
+    {
+      "gen_id": "vecteurs_2nde",
+      "config": {
+        "nb_coord": 3,
+        "nb_milieu": 2,
+        "nb_colin": 2
+      }
+    },
+    {
+      "gen_id": "droites_2nde",
+      "config": {
+        "nb_eq_2pts": 3,
+        "nb_intersection": 2
+      }
+    }
+  ]
+}
