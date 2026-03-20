@@ -1,0 +1,55 @@
+{
+  "titre": "Entraînement de calcul",
+  "classe": "Seconde",
+  "type": "Entraînement",
+  "nb_sujets": 30,
+  "corrige": "Après chaque sujet",
+  "qr_codes": "Oui",
+  "corrige_mode": "Complet",
+  "fichier": "sujet.tex",
+  "afficher_nom": false,
+  "afficher_consigne": false,
+  "consigne_texte": "La qualité de la rédaction entre en compte dans la notation",
+  "difficulty_filter_enabled": false,
+  "difficulty_z_center": 0.0,
+  "difficulty_z_tolerance": 0.75,
+  "difficulty_calibration_samples": 80,
+  "difficulty_max_attempts": 40,
+  "composition": [
+    {
+      "gen_id": "factorisation_commun_2nde",
+      "config": {
+        "nb_questions": 3
+      }
+    },
+    {
+      "gen_id": "identites_remarquables_2nde",
+      "config": {
+        "nb_questions": 3,
+        "types": "Mixte"
+      }
+    },
+    {
+      "gen_id": "inequations_2nde",
+      "config": {
+        "nb_questions": 6,
+        "niveau_max": 3
+      }
+    },
+    {
+      "gen_id": "racines_2nde",
+      "config": {
+        "nb_simplifier": 2,
+        "nb_combiner": 2,
+        "nb_radicaux": 1,
+        "nb_binome": 1
+      }
+    },
+    {
+      "gen_id": "tableau_signes_2nde",
+      "config": {
+        "nb_questions": 4
+      }
+    }
+  ]
+}
