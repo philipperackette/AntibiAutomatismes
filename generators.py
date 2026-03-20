@@ -1556,13 +1556,20 @@ class IntervallesValeurAbsolue2nde(ExerciseGenerator):
                 r_val = random.randint(1, 5)
                 strict = random.choice([True, False])
                 comp = '<' if strict else '\\leqslant'
-                enonce_str = f"|x - ({a_val})| {comp} {r_val}"
+                # Écriture sans parenthèses inutiles : |x - 3|, |x + 5|, |x|
+                if a_val == 0:
+                    abs_str = "|x|"
+                elif a_val > 0:
+                    abs_str = f"|x - {a_val}|"
+                else:
+                    abs_str = f"|x + {-a_val}|"
+                enonce_str = f"{abs_str} {comp} {r_val}"
                 lo = a_val - r_val; hi = a_val + r_val
                 if strict:
                     sol_str = f"\\left] {lo} \\,;\\, {hi} \\right["
                 else:
                     sol_str = f"\\left[ {lo} \\,;\\, {hi} \\right]"
-                detail = (f"$|x - ({a_val})| {comp} {r_val}$\n\n"
+                detail = (f"${enonce_str}$\n\n"
                           f"si et seulement si ${a_val} - {r_val} {comp.replace('leqslant','leq')} x {comp.replace('leqslant','leq')} {a_val} + {r_val}$\n\n"
                           f"si et seulement si $x \\in {sol_str}$")
                 q_diff = 3.0 + _addition_weight(abs(a_val), r_val) * 2
