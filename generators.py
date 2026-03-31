@@ -209,6 +209,29 @@ def _fraction_cost(num, den):
     if int(num) < 0 or int(den) < 0: cost += 0.3
     return cost
 
+def _fmt_lx(coef: int) -> str:
+    """Formate coef*x en LaTeX propre : -x, x, 2x, -3x (jamais -1x ou 1x)."""
+    if coef == 1: return 'x'
+    if coef == -1: return '-x'
+    return f"{coef}x"
+
+def _needs_fraction_simplification(num: int, den: int) -> bool:
+    """Renvoie True si dfrac{num}{den} nécessite une réduction effective (pgcd > 1).
+    Un simple déplacement de signe (dénominateur négatif seul, pgcd=1) ne justifie pas
+    une étape ⟺ supplémentaire : on affiche directement la forme simplifiée."""
+    from math import gcd
+    if den == 0: return False
+    # Normaliser le signe vers le numérateur pour tester le pgcd réel
+    if den < 0:
+        num, den = -num, -den
+    return gcd(abs(int(num)), abs(int(den))) > 1
+
+def _display_fraction_latex(num: int, den: int) -> str:
+    """Construit \\dfrac{num}{den} avec dénominateur positif (déplace le signe au numérateur)."""
+    if den < 0:
+        num, den = -num, -den
+    return f"\\dfrac{{{num}}}{{{den}}}"
+
 def _sqrt_simplification_cost(n):
     """Coût de simplification de √n."""
     n = abs(int(n))
@@ -551,15 +574,32 @@ class Equations3e(ExerciseGenerator):
                 lev = 'simple' if niveau.startswith('Simple') else ('moyen' if niveau.startswith('Moyen') else 'complet')
             if lev=='simple':
                 a=random.choice([j for j in range(-9,10) if j not in [0,1]]); bv=random.choice([j for j in range(-20,21) if j!=0])
-                eq=f"{a}x = {bv}"; sol=Rational(bv,a); q_diff=1.5+_fraction_cost(bv,a)
+                eq=f"{_fmt_lx(a)} = {bv}"; sol=Rational(bv,a); q_diff=1.5+_fraction_cost(bv,a)
                 sol_l=latex(sol).replace('\\frac','\\dfrac')
-                detail=f"${eq}$\n\n$\\Leftrightarrow x = \\dfrac{{{bv}}}{{{a}}} = {sol_l}$"
+                # Étape de simplification seulement si la fraction n'est pas déjà irréductible
+                if _needs_fraction_simplification(bv, a):
+                    detail = (f"${eq}$\n\n"
+                              f"$\\Leftrightarrow x = {_display_fraction_latex(bv, a)}$\n\n"
+                              f"$\\Leftrightarrow x = {sol_l}$")
+                else:
+                    detail = f"${eq}$\n\n$\\Leftrightarrow x = {sol_l}$"
             elif lev=='moyen':
                 a=random.choice([j for j in range(-9,10) if j not in [0,1]])
                 bv=random.choice([1,-1])*random.randint(1,15); cv=random.choice([1,-1])*random.randint(1,15)
                 eq=f"{str(a*x+bv).replace('*','')} = {cv}"; sol=Rational(cv-bv,a)
                 sol_l=latex(sol).replace('\\frac','\\dfrac'); rhs=cv-bv
-                detail=(f"${eq}$\n\n$\\Leftrightarrow {a}x = {cv} - ({bv}) = {rhs}$\n\n$\\Leftrightarrow x = \\dfrac{{{rhs}}}{{{a}}} = {sol_l}$")
+                # Séparation : transposition (une égalité) | calcul | division | [simplification]
+                if _needs_fraction_simplification(rhs, a):
+                    detail = (f"${eq}$\n\n"
+                              f"$\\Leftrightarrow {_fmt_lx(a)} = {cv} - ({bv})$\n\n"
+                              f"$\\Leftrightarrow {_fmt_lx(a)} = {rhs}$\n\n"
+                              f"$\\Leftrightarrow x = {_display_fraction_latex(rhs, a)}$\n\n"
+                              f"$\\Leftrightarrow x = {sol_l}$")
+                else:
+                    detail = (f"${eq}$\n\n"
+                              f"$\\Leftrightarrow {_fmt_lx(a)} = {cv} - ({bv})$\n\n"
+                              f"$\\Leftrightarrow {_fmt_lx(a)} = {rhs}$\n\n"
+                              f"$\\Leftrightarrow x = {sol_l}$")
                 q_diff=3.0+_addition_weight(abs(cv),abs(bv))+_fraction_cost(rhs,a)
             else:
                 while True:
@@ -569,7 +609,15 @@ class Equations3e(ExerciseGenerator):
                 eq=f"{str(a*x+bv).replace('*','')} = {str(cv*x+dv).replace('*','')}"; sol=Rational(dv-bv,a-cv)
                 sol_l=latex(sol).replace('\\frac','\\dfrac')
                 cd=a-cv; cn=dv-bv
-                detail=(f"${eq}$\n\n$\\Leftrightarrow {cd}x = {cn}$\n\n$\\Leftrightarrow x = \\dfrac{{{cn}}}{{{cd}}} = {sol_l}$")
+                if _needs_fraction_simplification(cn, cd):
+                    detail = (f"${eq}$\n\n"
+                              f"$\\Leftrightarrow {_fmt_lx(cd)} = {cn}$\n\n"
+                              f"$\\Leftrightarrow x = {_display_fraction_latex(cn, cd)}$\n\n"
+                              f"$\\Leftrightarrow x = {sol_l}$")
+                else:
+                    detail = (f"${eq}$\n\n"
+                              f"$\\Leftrightarrow {_fmt_lx(cd)} = {cn}$\n\n"
+                              f"$\\Leftrightarrow x = {sol_l}$")
                 q_diff=5.0+_addition_weight(abs(a),abs(cv))+_addition_weight(abs(dv),abs(bv))+_fraction_cost(cn,cd)
                 q_diff+=0.5*sum(1 for v in [a,bv,cv,dv] if v<0)
             sol_set = f"S = \\left\\{{{sol_l}\\right\\}}"
@@ -926,22 +974,42 @@ class Inequations2nde(ExerciseGenerator):
             if level == 1:
                 cs2 = _fsym[comp] if a < 0 else cs
                 rhs_l = latex(Rational(b, a)).replace('\\frac', '\\dfrac')
-                detail = (f"${_lx(a)} {cs} {b}$\n\n"
-                          f"$\\Leftrightarrow x {cs2} {rhs_l}$")
+                if _needs_fraction_simplification(b, a):
+                    detail = (f"${_lx(a)} {cs} {b}$\n\n"
+                              f"$\\Leftrightarrow x {cs2} {_display_fraction_latex(b, a)}$\n\n"
+                              f"$\\Leftrightarrow x {cs2} {rhs_l}$")
+                else:
+                    detail = (f"${_lx(a)} {cs} {b}$\n\n"
+                              f"$\\Leftrightarrow x {cs2} {rhs_l}$")
             elif level == 2:
                 cs2 = _fsym[comp] if a < 0 else cs
                 rhs1 = c - b
                 rhs_l = latex(Rational(rhs1, a)).replace('\\frac', '\\dfrac')
-                detail = (f"${latex(e1)} {cs} {c}$\n\n"
-                          f"$\\Leftrightarrow {_lx(a)} {cs} {c} - ({b}) = {rhs1}$\n\n"
-                          f"$\\Leftrightarrow x {cs2} {rhs_l}$")
+                # Séparation stricte : une seule (in)égalité par ⟺
+                if _needs_fraction_simplification(rhs1, a):
+                    detail = (f"${latex(e1)} {cs} {c}$\n\n"
+                              f"$\\Leftrightarrow {_lx(a)} {cs} {c} - ({b})$\n\n"
+                              f"$\\Leftrightarrow {_lx(a)} {cs} {rhs1}$\n\n"
+                              f"$\\Leftrightarrow x {cs2} {_display_fraction_latex(rhs1, a)}$\n\n"
+                              f"$\\Leftrightarrow x {cs2} {rhs_l}$")
+                else:
+                    detail = (f"${latex(e1)} {cs} {c}$\n\n"
+                              f"$\\Leftrightarrow {_lx(a)} {cs} {c} - ({b})$\n\n"
+                              f"$\\Leftrightarrow {_lx(a)} {cs} {rhs1}$\n\n"
+                              f"$\\Leftrightarrow x {cs2} {rhs_l}$")
             else:
                 cd = a - e; cn = d - b
                 cs2 = _fsym[comp] if cd < 0 else cs
                 rhs_l = latex(Rational(cn, cd)).replace('\\frac', '\\dfrac')
-                detail = (f"${latex(e1)} {cs} {latex(e2)}$\n\n"
-                          f"$\\Leftrightarrow {_lx(cd)} {cs} {cn}$\n\n"
-                          f"$\\Leftrightarrow x {cs2} {rhs_l}$")
+                if _needs_fraction_simplification(cn, cd):
+                    detail = (f"${latex(e1)} {cs} {latex(e2)}$\n\n"
+                              f"$\\Leftrightarrow {_lx(cd)} {cs} {cn}$\n\n"
+                              f"$\\Leftrightarrow x {cs2} {_display_fraction_latex(cn, cd)}$\n\n"
+                              f"$\\Leftrightarrow x {cs2} {rhs_l}$")
+                else:
+                    detail = (f"${latex(e1)} {cs} {latex(e2)}$\n\n"
+                              f"$\\Leftrightarrow {_lx(cd)} {cs} {cn}$\n\n"
+                              f"$\\Leftrightarrow x {cs2} {rhs_l}$")
             corriges.append(detail + f"\n\n$S = {sol_latex}$")
         enonce = "\\noindent\\textbf{Exercice} -- Résoudre les inéquations suivantes.\n\\begin{enumerate}\n"
         for e in et: enonce += f"\\item ${e}$\n"
@@ -1692,23 +1760,31 @@ class FonctionsReference2nde(ExerciseGenerator):
                     k = random.randint(1, 10)**2  # carré parfait
                     r = int(math.isqrt(k))
                     enonce_str = f"f(x) = x^2. \\text{{ Résoudre }} f(x) = {k}"
-                    sol_str = f"x = {r} \\text{{ ou }} x = -{r}"
-                    detail = f"$x^2 = {k} \\Longleftrightarrow x = \\sqrt{{{k}}} = {r}$ ou $x = -\\sqrt{{{k}}} = -{r}$"
+                    sol_str = f"S = \\left\\{{-{r} \\,;\\, {r}\\right\\}}"
+                    detail = (f"$x^2 = {k}$\n\n"
+                              f"$\\Leftrightarrow x = \\sqrt{{{k}}}$ ou $x = -\\sqrt{{{k}}}$\n\n"
+                              f"$\\Leftrightarrow x = {r}$ ou $x = -{r}$\n\n"
+                              f"Donc $S = \\left\\{{-{r} \\,;\\, {r}\\right\\}}$")
                     q_diff = 2.5 + _sqrt_simplification_cost(k)
                 elif func == 'inverse':
                     k_num = random.choice([1,-1]) * random.randint(1, 5)
                     k_den = random.randint(2, 6)
                     k = Rational(k_num, k_den)
-                    enonce_str = f"f(x) = \\dfrac{{1}}{{x}}. \\text{{ Résoudre }} f(x) = {latex(k).replace(chr(92)+'frac',chr(92)+'dfrac')}"
+                    k_l = latex(k).replace(chr(92)+'frac',chr(92)+'dfrac')
+                    enonce_str = f"f(x) = \\dfrac{{1}}{{x}}. \\text{{ Résoudre }} f(x) = {k_l}"
                     sol_val = Rational(k_den, k_num)
-                    sol_str = f"x = {latex(sol_val).replace(chr(92)+'frac',chr(92)+'dfrac')}"
-                    detail = f"$\\dfrac{{1}}{{x}} = {latex(k).replace(chr(92)+'frac',chr(92)+'dfrac')} \\Longleftrightarrow x = {latex(sol_val).replace(chr(92)+'frac',chr(92)+'dfrac')}$"
+                    sol_l = latex(sol_val).replace(chr(92)+'frac',chr(92)+'dfrac')
+                    sol_str = f"S = \\left\\{{{sol_l}\\right\\}}"
+                    detail = f"$\\dfrac{{1}}{{x}} = {k_l}$\n\n$\\Leftrightarrow x = {sol_l}$\n\nDonc $S = \\left\\{{{sol_l}\\right\\}}$"
                     q_diff = 3.0
                 else:
                     k = random.randint(1, 10)
                     enonce_str = f"f(x) = \\sqrt{{x}}. \\text{{ Résoudre }} f(x) = {k}"
-                    sol_str = f"x = {k**2}"
-                    detail = f"$\\sqrt{{x}} = {k} \\Longleftrightarrow x = {k}^2 = {k**2}$ (avec $x \\geq 0$)"
+                    sol_str = f"S = \\left\\{{{k**2}\\right\\}}"
+                    detail = (f"$\\sqrt{{x}} = {k}$\n\n"
+                              f"$\\Leftrightarrow x = {k}^2$ (avec $x \\geq 0$)\n\n"
+                              f"$\\Leftrightarrow x = {k**2}$\n\n"
+                              f"Donc $S = \\left\\{{{k**2}\\right\\}}$")
                     q_diff = 2.0 + _multiplication_weight(k, k)
 
             et.append(enonce_str); st.append(sol_str); corriges.append(detail)
@@ -1733,7 +1809,7 @@ class FonctionsReference2nde(ExerciseGenerator):
 _DIFFICULTY_STATS_FILE = os.path.join(os.path.dirname(__file__), "difficulty_stats.json")
 _DIFFICULTY_STATS_CACHE = None
 _DIFFICULTY_CACHE_FORMAT_VERSION = 3
-_DIFFICULTY_ESTIMATOR_VERSION = 6  # v4: corrigé improvements  # Bumped: cognitive model
+_DIFFICULTY_ESTIMATOR_VERSION = 7  # v7: rigueur pédagogique corrigés — séparation étapes ⟺, S={}
 _DIFFICULTY_MIN_SIGMA = 1.0
 
 
