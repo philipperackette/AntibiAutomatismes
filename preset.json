@@ -4,30 +4,32 @@
   "type": "Entraînement",
   "nb_sujets": 5,
   "corrige": "Après chaque sujet",
-  "qr_codes": "Oui",
+  "qr_codes": "Non",
   "corrige_mode": "Complet",
   "fichier": "/Users/professeurrackette/Desktop/sujet.tex",
   "afficher_nom": false,
   "afficher_consigne": false,
   "consigne_texte": "La qualité de la rédaction entre en compte dans la notation",
   "difficulty_filter_enabled": true,
-  "difficulty_z_center": 0.8,
-  "difficulty_z_tolerance": 0.2,
-  "difficulty_calibration_samples": 180,
-  "difficulty_max_attempts": 40,
+  "difficulty_z_center": -0.0,
+  "difficulty_z_tolerance": 0.5,
+  "difficulty_calibration_samples": 200,
+  "difficulty_max_attempts": 50,
   "composition": [
     {
       "gen_id": "distributivite_5e",
       "config": {
         "nb_developper": 4,
-        "nb_factoriser": 4
+        "nb_factoriser": 4,
+        "avec_fractions": "Oui"
       }
     },
     {
       "gen_id": "priorites_5e",
       "config": {
         "nb_questions": 6,
-        "avec_parentheses": "Oui"
+        "avec_parentheses": "Oui",
+        "avec_fractions": "Oui"
       }
     },
     {
@@ -43,13 +45,15 @@
       "gen_id": "developpement_3e",
       "config": {
         "nb_questions": 6,
-        "nb_simples": 2
+        "nb_simples": 2,
+        "avec_fractions": "Oui"
       }
     },
     {
       "gen_id": "reduction_3e",
       "config": {
-        "nb_questions": 5
+        "nb_questions": 5,
+        "avec_fractions": "Oui"
       }
     },
     {
@@ -68,13 +72,15 @@
       "gen_id": "equations_3e",
       "config": {
         "nb_questions": 5,
-        "niveau": "Progressif"
+        "niveau": "Progressif",
+        "avec_fractions": "Oui"
       }
     },
     {
       "gen_id": "equations_produit_3e",
       "config": {
-        "nb_questions": 4
+        "nb_questions": 4,
+        "avec_fractions": "Oui"
       }
     },
     {
@@ -92,6 +98,13 @@
       }
     },
     {
+      "gen_id": "fonctions_ref_2nde",
+      "config": {
+        "nb_questions": 5,
+        "fonctions": "Mixte"
+      }
+    },
+    {
       "gen_id": "identites_remarquables_2nde",
       "config": {
         "nb_questions": 3,
@@ -99,10 +112,18 @@
       }
     },
     {
+      "gen_id": "intervalles_abs_2nde",
+      "config": {
+        "nb_questions": 5,
+        "avec_abs": "Mélange"
+      }
+    },
+    {
       "gen_id": "inequations_2nde",
       "config": {
         "nb_questions": 6,
-        "niveau_max": 3
+        "niveau_max": 3,
+        "avec_fractions": "Oui"
       }
     },
     {
@@ -131,7 +152,8 @@
       "config": {
         "nb_coord": 3,
         "nb_milieu": 2,
-        "nb_colin": 2
+        "nb_colin": 2,
+        "avec_fractions": "Oui"
       }
     },
     {

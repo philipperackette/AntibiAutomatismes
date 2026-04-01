@@ -249,6 +249,95 @@ def _sqrt_simplification_cost(n):
     return max(cost, 0.5)
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# Helpers pour nombres rationnels — mode « avec fractions »
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _rand_frac(denominators=(2, 3, 4), max_num=None, signed=True, nonzero=True) -> Rational:
+    """Génère un rationnel irréductible aléatoire à petit dénominateur.
+
+    Garantit num ≠ 0, dénominateur dans `denominators`, fraction irréductible.
+    """
+    den = random.choice(denominators)
+    if max_num is None:
+        max_num = 2 * den
+    attempts = 0
+    while attempts < 50:
+        num = random.randint(1, max_num)
+        if signed and random.random() < 0.5:
+            num = -num
+        if nonzero and num == 0:
+            attempts += 1; continue
+        g = math.gcd(abs(num), den)
+        r = Rational(num // g, den // g)
+        if r.q != 1:          # garder seulement les vraies fractions
+            return r
+        attempts += 1
+    # Fallback : 1/den (toujours une vraie fraction)
+    return Rational(1 if not signed else random.choice([1, -1]), den)
+
+
+def _fmt_rational(r) -> str:
+    """Formate un Rational en LaTeX compact : entier si dénominateur = 1, sinon \\dfrac."""
+    r = Rational(r)
+    if r.q == 1:
+        return str(int(r.p))
+    sign = '' if r.p >= 0 else '-'
+    return f"{sign}\\dfrac{{{abs(r.p)}}}{{{r.q}}}"
+
+
+def _fmt_rational_linear(a, b, var: str = 'x') -> str:
+    """Formate a·var + b (a, b peuvent être int ou Rational) en LaTeX propre.
+
+    Exemples :
+      _fmt_rational_linear(Rational(1,2), Rational(-3,4)) → '\\dfrac{1}{2}x - \\dfrac{3}{4}'
+      _fmt_rational_linear(2, -3)                         → '2x - 3'
+      _fmt_rational_linear(0, Rational(1,3))              → '\\dfrac{1}{3}'
+    """
+    a, b = Rational(a), Rational(b)
+    parts: list[str] = []
+
+    # --- terme en x ---
+    if a != 0:
+        if a == 1:
+            parts.append(var)
+        elif a == -1:
+            parts.append(f'-{var}')
+        elif a.q == 1:
+            parts.append(f'{int(a)}{var}')
+        else:
+            sign = '' if a.p > 0 else '-'
+            parts.append(f'{sign}\\dfrac{{{abs(a.p)}}}{{{a.q}}}{var}')
+
+    # --- terme constant ---
+    if b != 0:
+        if b.q == 1:
+            bv = int(b)
+            if not parts:
+                parts.append(str(bv))
+            elif bv > 0:
+                parts.append(f' + {bv}')
+            else:
+                parts.append(f' - {abs(bv)}')
+        else:
+            if not parts:
+                sign = '' if b.p > 0 else '-'
+                parts.append(f'{sign}\\dfrac{{{abs(b.p)}}}{{{b.q}}}')
+            elif b.p > 0:
+                parts.append(f' + \\dfrac{{{b.p}}}{{{b.q}}}')
+            else:
+                parts.append(f' - \\dfrac{{{abs(b.p)}}}{{{b.q}}}')
+
+    return ''.join(parts) if parts else '0'
+
+
+def _rational_cognitive_cost(r) -> float:
+    """Coût cognitif d'un nombre rationnel (0 si entier, sinon _fraction_cost)."""
+    r = Rational(r)
+    if r.q == 1:
+        return 0.0
+    return _fraction_cost(int(r.p), int(r.q))
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # Base class
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -346,19 +435,35 @@ class PrioritesOperatoires5e(ExerciseGenerator):
         return [
             {'key':'nb_questions','label':'Nombre de questions','type':'int','default':6,'min':2,'max':12},
             {'key':'avec_parentheses','label':'Avec parenthèses','type':'choice','default':'Oui','choices':['Oui','Non','Mélange']},
+            {'key':'avec_fractions','label':'Avec fractions','type':'choice','default':'Non','choices':['Non','Oui']},
         ]
     def generate(self, config):
         config = self._resolve_difficulty(config)
         n=config.get('nb_questions',6); parens=config.get('avec_parentheses','Oui')
+        use_frac = config.get('avec_fractions','Non') == 'Oui'
         enonces, solutions, corriges = [], [], []; total_diff = 0.0
         for i in range(n):
             use_p = (parens=='Oui') or (parens=='Mélange' and i >= n//2)
-            templates = [self._p1, self._p2] if use_p else [self._np1, self._np2]
-            es, ed, q_diff, steps = random.choice(templates)()
-            r = eval(es)
-            if isinstance(r,float) and r==int(r): r=int(r)
-            enonces.append(ed); solutions.append(str(r)); total_diff += q_diff
-            corriges.append("$" + ed + "$\n\n" + "\n\n".join(steps) + f"\n\n$= {r}$")
+            if use_frac:
+                # Templates avec fractions — pas d'eval(), tout en Rational
+                frac_templates_np = [self._fn1, self._fn2]
+                frac_templates_p  = [self._fp1, self._fp2]
+                templates = frac_templates_p if use_p else frac_templates_np
+            else:
+                templates = [self._p1, self._p2] if use_p else [self._np1, self._np2]
+
+            if use_frac:
+                ed, result_r, q_diff, steps = random.choice(templates)()
+                result_str = _fmt_rational(result_r)
+                enonces.append(ed); solutions.append(result_str); total_diff += q_diff
+                corriges.append("$" + ed + "$\n\n" + "\n\n".join(steps) + f"\n\n$= {result_str}$")
+            else:
+                es, ed, q_diff, steps = random.choice(templates)()
+                r = eval(es)
+                if isinstance(r,float) and r==int(r): r=int(r)
+                enonces.append(ed); solutions.append(str(r)); total_diff += q_diff
+                corriges.append("$" + ed + "$\n\n" + "\n\n".join(steps) + f"\n\n$= {r}$")
+
         enonce = "\\noindent\\textbf{Exercice} -- Calculer en respectant les priorités opératoires.\n\\begin{enumerate}\n"
         for e in enonces: enonce += f"\\item ${e}$\n"
         enonce += "\\end{enumerate}\n"
@@ -371,6 +476,7 @@ class PrioritesOperatoires5e(ExerciseGenerator):
                 'difficulte_raw':round(total_diff, 2),
                 'qr_answers':[_plain(s) for s in solutions]}
 
+    # ── Templates entiers (inchangés) ──────────────────────────────────────────
     def _np1(self):
         a,b,c = random.randint(2,12),random.randint(2,9),random.randint(1,20)
         op = random.choice(['+','-'])
@@ -393,6 +499,97 @@ class PrioritesOperatoires5e(ExerciseGenerator):
         diff = _addition_weight(b,c) + _multiplication_weight(a,inner) + _addition_weight(a*inner,d) + 1.0
         return f"{a}*({b}{o1}{c}){o2}{d}", f"{a} \\times ({b} {o1} {c}) {o2} {d}", diff, [f"$= {a} \\times {inner} {o2} {d}$", f"$= {a*inner} {o2} {d}$"]
 
+    # ── Templates avec fractions ───────────────────────────────────────────────
+    # Principe : le produit (p/q) × (q·m) = p·m est entier → résultat net
+    # On travaille avec des Rational, pas d'eval().
+
+    def _fn1(self):
+        """Sans parenthèses : (p/q) × (q·m) + c  →  entier + entier"""
+        q  = random.choice([2, 3, 4])
+        p  = random.choice([i for i in range(1, q) if math.gcd(i, q) == 1])
+        if random.random() < 0.5: p = -p
+        m  = random.randint(1, 6)            # multiple : q·m est le multiplicande
+        c  = random.randint(1, 12) * random.choice([1, -1])
+        op = random.choice(['+', '-'])
+        k  = Rational(p, q)
+        a  = q * m                           # a = q·m, produit = p·m (entier)
+        prod = k * a                         # == Rational(p*m)
+        c_r = Rational(c) * (1 if op == '+' else -1)
+        result = prod + c_r
+        k_str = _fmt_rational(k)
+        op_str = op
+        c_str = str(abs(c))
+        enonce_d = f"{k_str} \\times {a} {op_str} {c_str}"
+        prod_str = _fmt_rational(prod)
+        diff = _fraction_cost(abs(p), q) + _addition_weight(abs(int(prod)), abs(c)) + 1.2
+        step = f"$= {prod_str} {op_str} {c_str}$"
+        return enonce_d, result, diff, [step]
+
+    def _fn2(self):
+        """Sans parenthèses : (p/q) × (q·m) + (r/s) × (s·n)  →  entier + entier"""
+        q  = random.choice([2, 3, 4]); s = random.choice([2, 3, 4])
+        p  = random.choice([i for i in range(1, q) if math.gcd(i, q) == 1])
+        r  = random.choice([i for i in range(1, s) if math.gcd(i, s) == 1])
+        if random.random() < 0.5: p = -p
+        if random.random() < 0.5: r = -r
+        m  = random.randint(1, 5); n = random.randint(1, 5)
+        k1 = Rational(p, q); k2 = Rational(r, s)
+        a  = q * m; b = s * n
+        prod1 = k1 * a; prod2 = k2 * b
+        result = prod1 + prod2
+        k1_str = _fmt_rational(k1); k2_str = _fmt_rational(k2)
+        enonce_d = f"{k1_str} \\times {a} + {k2_str} \\times {b}"
+        diff = _fraction_cost(abs(p),q) + _fraction_cost(abs(r),s) + _addition_weight(abs(int(prod1)),abs(int(prod2))) + 1.5
+        step = f"$= {_fmt_rational(prod1)} + {_fmt_rational(prod2)}$"
+        return enonce_d, result, diff, [step]
+
+    def _fp1(self):
+        """Avec parenthèses : (p/q) × (q·m + n)  →  entier + p·n/q"""
+        q = random.choice([2, 3, 4])
+        p = random.choice([i for i in range(1, q) if math.gcd(i, q) == 1])
+        if random.random() < 0.5: p = -p
+        m  = random.randint(1, 6)
+        n  = random.randint(1, 9) * random.choice([1, -1])
+        op = random.choice(['+', '-'])
+        k  = Rational(p, q)
+        a  = q * m
+        b  = abs(n)
+        inner_val = a + (b if op == '+' else -b)
+        result = k * inner_val
+        k_str = _fmt_rational(k)
+        inner_str = f"{a} {op} {b}"
+        enonce_d = f"{k_str} \\times \\left({inner_str}\\right)"
+        inner_fmt = _fmt_rational(inner_val)
+        diff = _addition_weight(a, b) + _fraction_cost(abs(p), q) + 1.0
+        if result.q != 1:
+            diff += _fraction_cost(abs(int(result.p)), int(result.q))
+        step = f"$= {k_str} \\times {inner_fmt}$"
+        return enonce_d, result, diff, [step]
+
+    def _fp2(self):
+        """Avec parenthèses : (p/q) × (q·m + q·n) + c  →  entier + entier"""
+        q = random.choice([2, 3, 4])
+        p = random.choice([i for i in range(1, q) if math.gcd(i, q) == 1])
+        if random.random() < 0.5: p = -p
+        m  = random.randint(1, 5); n = random.randint(1, 5)
+        c  = random.randint(1, 10) * random.choice([1, -1])
+        op1 = random.choice(['+', '-']); op2 = random.choice(['+', '-'])
+        k  = Rational(p, q)
+        a  = q * m; b = q * n
+        inner_val = a + (b if op1 == '+' else -b)
+        prod = k * inner_val
+        c_r = Rational(c) * (1 if op2 == '+' else -1)
+        result = prod + c_r
+        k_str = _fmt_rational(k)
+        enonce_d = f"{k_str} \\times \\left({a} {op1} {b}\\right) {op2} {abs(c)}"
+        inner_fmt = _fmt_rational(inner_val)
+        prod_fmt  = _fmt_rational(prod)
+        diff = (_addition_weight(a,b) + _fraction_cost(abs(p),q)
+                + _addition_weight(abs(int(prod)), abs(c)) + 1.2)
+        steps = [f"$= {k_str} \\times {inner_fmt} {op2} {abs(c)}$",
+                 f"$= {prod_fmt} {op2} {abs(c)}$"]
+        return enonce_d, result, diff, steps
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Distributivité 5e — BUG FIX : construction manuelle, pas d'auto-expand SymPy
@@ -401,7 +598,7 @@ class PrioritesOperatoires5e(ExerciseGenerator):
 @register
 class Distributivite5e(ExerciseGenerator):
     id="distributivite_5e"; name="Distributivité simple"; niveau="5e"
-    category="Nombres et calculs"; description="Développer k(a+b) et factoriser ka+kb"
+    category="Nombres et calculs"; description="Développer k(ax+b) et factoriser ka·x+kb"
     difficulty_config = {
         'Facile':    {'nb_developper': 3, 'nb_factoriser': 0},
         'Moyen':     {'nb_developper': 4, 'nb_factoriser': 4},
@@ -412,10 +609,13 @@ class Distributivite5e(ExerciseGenerator):
         return [
             {'key':'nb_developper','label':'Questions développer','type':'int','default':4,'min':0,'max':10},
             {'key':'nb_factoriser','label':'Questions factoriser','type':'int','default':4,'min':0,'max':10},
+            {'key':'avec_fractions','label':'Avec fractions','type':'choice','default':'Non',
+             'choices':['Non','Oui']},
         ]
     def generate(self, config):
         config = self._resolve_difficulty(config)
         n_dev=config.get('nb_developper',4); n_fac=config.get('nb_factoriser',4)
+        use_frac = config.get('avec_fractions','Non') == 'Oui'
         qr_dist=[]; enonce=""; corrige=""; total_diff=0.0
         nz = [i for i in range(-9,10) if i!=0]
 
@@ -423,28 +623,95 @@ class Distributivite5e(ExerciseGenerator):
             enonce += "\\noindent\\textbf{Exercice} -- Développer les expressions suivantes.\n\\begin{enumerate}\n"
             ci = "\\begin{enumerate}\n"
             for _ in range(n_dev):
-                k,a,b = random.choice(nz),random.choice(nz),random.choice(nz)
-                # ── Construction MANUELLE (pas de SymPy pour l'énoncé) ──
+                if use_frac:
+                    # k = fraction irréductible à petit dénominateur (2, 3 ou 4)
+                    # a, b entiers non nuls — pas forcément multiples du dénominateur
+                    k = _rand_frac(denominators=(2, 3, 4))
+                    a = random.choice(nz); b = random.choice(nz)
+                else:
+                    k = random.choice(nz); a = random.choice(nz); b = random.choice(nz)
+
+                k_r = Rational(k)
+                # ── Formattage de l'énoncé — \left( \right) pour englober les fracs ──
                 inner = _fmt_binomial_latex(a, b)
-                if k == 1: enonce_str = f"({inner})"
-                elif k == -1: enonce_str = f"-({inner})"
-                else: enonce_str = f"{k}({inner})"
-                # Développer manuellement
-                ka, kb = k*a, k*b
-                dev_str = _fmt_binomial_latex(ka, kb)
+                if k_r == 1:    enonce_str = f"\\left({inner}\\right)"
+                elif k_r == -1: enonce_str = f"-\\left({inner}\\right)"
+                elif k_r.q == 1: enonce_str = f"{int(k_r)}\\left({inner}\\right)"
+                else:
+                    sign = '' if k_r.p > 0 else '-'
+                    enonce_str = f"{sign}\\dfrac{{{abs(k_r.p)}}}{{{k_r.q}}}\\left({inner}\\right)"
+
+                # ── Développement ──
+                ka = k_r * a; kb = k_r * b
+                dev_str = _fmt_rational_linear(ka, kb)
+
                 enonce += f"\\item ${enonce_str}$\n"
-                # Corrigé avec étapes
-                ci += f"\\item ${enonce_str} = {dev_str}$\n"
+
+                # ── Corrigé ──
+                if use_frac and k_r.q != 1:
+                    # Étape intermédiaire : montrer les produits non simplifiés
+                    # puis la forme réduite finale (si différente)
+                    def _show_raw_frac(num, den):
+                        """Affiche dfrac{|num|}{den} avec signe extérieur."""
+                        if num == 0: return '0'
+                        g = math.gcd(abs(num), den)
+                        reduced_num = num // g; reduced_den = den // g
+                        if reduced_den == 1:
+                            return str(reduced_num)
+                        sign = '' if reduced_num > 0 else '-'
+                        return f"{sign}\\dfrac{{{abs(reduced_num)}}}{{{reduced_den}}}"
+
+                    kp, kq = int(k_r.p), int(k_r.q)
+                    # Terme en x : kp*a / kq avant réduction
+                    raw_x_num = kp * a
+                    raw_x_str = _show_raw_frac(raw_x_num, kq)
+                    # Terme constant : kp*b / kq avant réduction
+                    raw_b_num = kp * b
+                    raw_b_str = _show_raw_frac(raw_b_num, kq)
+
+                    # Construire step1 avec signes explicites entre les termes
+                    step_parts = []
+                    if raw_x_num != 0:
+                        raw_x_coeff = _show_raw_frac(raw_x_num, kq)
+                        if raw_x_coeff == '1':   step_parts.append('x')
+                        elif raw_x_coeff == '-1': step_parts.append('-x')
+                        else:                     step_parts.append(f"{raw_x_coeff}x")
+                    if raw_b_num != 0:
+                        sign_b = '+' if raw_b_num > 0 else '-'
+                        raw_b_abs = _show_raw_frac(abs(raw_b_num), kq)
+                        if step_parts:
+                            step_parts.append(f" {sign_b} {raw_b_abs}")
+                        else:
+                            step_parts.append(f"{raw_b_str}")
+                    step1 = ''.join(step_parts) or '0'
+
+                    if step1 == dev_str:
+                        ci += f"\\item ${enonce_str} = {dev_str}$\n"
+                    else:
+                        ci += f"\\item ${enonce_str} = {step1} = {dev_str}$\n"
+                else:
+                    ci += f"\\item ${enonce_str} = {dev_str}$\n"
                 qr_dist.append(dev_str)
-                # Difficulté cognitive
-                q_diff = 1.0 + _multiplication_weight(k,a) + _multiplication_weight(k,b)
-                q_diff += _sign_cost(k<0) + _sign_cost(a<0) + _sign_cost(b<0)
-                if k<0 and a<0: q_diff += 0.8
-                if k<0 and b<0: q_diff += 0.8
+
+                # ── Difficulté cognitive ──
+                if use_frac and k_r.q != 1:
+                    q_diff = 1.0 + _rational_cognitive_cost(ka) + _rational_cognitive_cost(kb)
+                    q_diff += _fraction_cost(int(k_r.p), int(k_r.q))  # coût du facteur fraction
+                    q_diff += _sign_cost(k_r.p < 0) + _sign_cost(a < 0) + _sign_cost(b < 0)
+                    if k_r.p < 0 and a < 0: q_diff += 0.8
+                    if k_r.p < 0 and b < 0: q_diff += 0.8
+                else:
+                    ki = int(k_r)
+                    q_diff = 1.0 + _multiplication_weight(ki, a) + _multiplication_weight(ki, b)
+                    q_diff += _sign_cost(ki < 0) + _sign_cost(a < 0) + _sign_cost(b < 0)
+                    if ki < 0 and a < 0: q_diff += 0.8
+                    if ki < 0 and b < 0: q_diff += 0.8
                 total_diff += q_diff
             enonce += "\\end{enumerate}\n"; ci += "\\end{enumerate}\n"; corrige += ci
 
         if n_fac>0:
+            # La factorisation reste en entiers (trouver un facteur commun fractionnaire
+            # n'est pas au programme 5e)
             enonce += "\\noindent\\textbf{Exercice} -- Factoriser les expressions suivantes.\n\\begin{enumerate}\n"
             ci = "\\begin{enumerate}\n"
             for _ in range(n_fac):
@@ -480,29 +747,64 @@ class Reduction3e(ExerciseGenerator):
     difficulty_config = {'Facile':{'nb_questions':3},'Moyen':{'nb_questions':5},'Difficile':{'nb_questions':8}}
     @staticmethod
     def get_config():
-        return [{'key':'nb_questions','label':'Nombre de questions','type':'int','default':5,'min':2,'max':10}]
+        return [
+            {'key':'nb_questions','label':'Nombre de questions','type':'int','default':5,'min':2,'max':10},
+            {'key':'avec_fractions','label':'Avec fractions','type':'choice','default':'Non',
+             'choices':['Non','Oui']},
+        ]
     def generate(self, config):
         config = self._resolve_difficulty(config)
-        n=config.get('nb_questions',5); et,st=[],[]; total_diff=0.0
+        n=config.get('nb_questions',5)
+        use_frac = config.get('avec_fractions','Non') == 'Oui'
+        et,st,corriges=[],[],[]; total_diff=0.0
         for _ in range(n):
-            a,b = random.choice([1,-1])*random.randint(2,9), random.choice([1,-1])*random.randint(2,9)
-            c,d = random.choice([1,-1])*random.randint(2,9), random.choice([1,-1])*random.randint(2,9)
             s1,s2 = random.choice([1,-1]),random.choice([1,-1])
-            expr = s1*(a*x+b)+s2*(c*x+d); result = expand(expr)
-            e0=str(a*x+b).replace('*',''); e1=str(c*x+d).replace('*','')
-            disp = ('-' if s1==-1 else '')+'('+e0+')'+('+' if s2==1 else '-')+'('+e1+')'
-            et.append(disp); st.append(str(result).replace('**','^').replace('*',''))
+            if use_frac:
+                # Coefficients rationnels à petits dénominateurs
+                a = _rand_frac(denominators=(2,3,4))
+                b = _rand_frac(denominators=(2,3,4))
+                c = _rand_frac(denominators=(2,3,4))
+                d = _rand_frac(denominators=(2,3,4))
+            else:
+                a,b = Rational(random.choice([1,-1])*random.randint(2,9)), Rational(random.choice([1,-1])*random.randint(2,9))
+                c,d = Rational(random.choice([1,-1])*random.randint(2,9)), Rational(random.choice([1,-1])*random.randint(2,9))
+
+            # ── SymPy pour le résultat ──
+            expr = s1*(a*x + b) + s2*(c*x + d)
+            result_sym = expand(expr)
+            coef_x = result_sym.coeff(x)
+            coef_0 = result_sym.subs(x, 0)
+
+            # ── Formatage de l'énoncé ──
+            e0 = _fmt_rational_linear(a, b)
+            e1 = _fmt_rational_linear(c, d)
+            s2_op = '+' if s2 == 1 else '-'
+            s1_sign = '-' if s1 == -1 else ''
+            disp = f"{s1_sign}\\left({e0}\\right) {s2_op} \\left({e1}\\right)"
+            result_str = _fmt_rational_linear(coef_x, coef_0)
+
+            et.append(disp)
+            st.append(result_str)
+            corriges.append(f"${disp} = {result_str}$")
+
+            # ── Difficulté cognitive ──
             q_diff = 1.0
             if s1==-1: q_diff += 1.5
             if s2==-1: q_diff += 1.5
-            q_diff += _addition_weight(abs(s1*a), abs(s2*c)) + _addition_weight(abs(s1*b), abs(s2*d))
-            q_diff += 0.3 * sum(1 for v in [a,b,c,d] if v<0)
+            if use_frac:
+                q_diff += sum(_rational_cognitive_cost(v) for v in [a, b, c, d])
+                q_diff += 1.5  # addition de fractions sur les coefficients
+            else:
+                q_diff += _addition_weight(abs(float(s1*a)), abs(float(s2*c)))
+                q_diff += _addition_weight(abs(float(s1*b)), abs(float(s2*d)))
+                q_diff += 0.3 * sum(1 for v in [a,b,c,d] if float(v)<0)
             total_diff += q_diff
+
         enonce = "\\noindent\\textbf{Exercice} -- Réduire les expressions suivantes.\n\\begin{enumerate}\n"
         for e in et: enonce += f"\\item ${e}$\n"
         enonce += "\\end{enumerate}\n"
         corrige = "\\begin{enumerate}\n"
-        for i,s in enumerate(st): corrige += f"\\item ${et[i]} = {s}$\n"
+        for c in corriges: corrige += f"\\item {c}\n"
         corrige += "\\end{enumerate}\n"
         corrige_succinct = _build_succinct_corrige(st)
         return {'enonce':enonce,'corrige':corrige,'corrige_succinct':corrige_succinct,'qr_data':None,
@@ -521,23 +823,102 @@ class Developpement3e(ExerciseGenerator):
         return [
             {'key':'nb_questions','label':'Nombre de questions','type':'int','default':6,'min':2,'max':10},
             {'key':'nb_simples','label':'dont simples (b=0)','type':'int','default':2,'min':0,'max':4},
+            {'key':'avec_fractions','label':'Avec fractions','type':'choice','default':'Non',
+             'choices':['Non','Oui']},
         ]
     def generate(self, config):
         config = self._resolve_difficulty(config)
         n=config.get('nb_questions',6); ns=min(config.get('nb_simples',2),n)
+        use_frac = config.get('avec_fractions','Non') == 'Oui'
         et,st=[],[]; total_diff=0.0
+
+        def _fmt_factor(a_coef, b_cst):
+            """Formate (ax + b) en LaTeX avec parentheses adaptées."""
+            inner = _fmt_rational_linear(a_coef, b_cst)
+            return f"\\left({inner}\\right)"
+
+        def _fmt_poly2_rational(sym_expr):
+            """Formate un polynôme SymPy de degré ≤ 2 avec fractions en LaTeX propre."""
+            from sympy import Poly
+            try:
+                p = Poly(sym_expr, x)
+                coeffs = p.all_coeffs()   # [a2, a1, a0] ou [a1, a0] ou [a0]
+            except Exception:
+                return latex(sym_expr).replace('\\frac','\\dfrac')
+            while len(coeffs) < 3: coeffs.insert(0, Rational(0))
+            a2, a1, a0 = [Rational(c) for c in coeffs]
+            parts = []
+            # terme x²
+            if a2 != 0:
+                if a2 == 1:      parts.append('x^2')
+                elif a2 == -1:   parts.append('-x^2')
+                elif a2.q == 1:  parts.append(f'{int(a2)}x^2')
+                else:
+                    sign = '' if a2.p > 0 else '-'
+                    parts.append(f'{sign}\\dfrac{{{abs(a2.p)}}}{{{a2.q}}}x^2')
+            # terme x
+            if a1 != 0:
+                if not parts:
+                    if a1 == 1:     parts.append('x')
+                    elif a1 == -1:  parts.append('-x')
+                    elif a1.q == 1: parts.append(f'{int(a1)}x')
+                    else:
+                        sign = '' if a1.p > 0 else '-'
+                        parts.append(f'{sign}\\dfrac{{{abs(a1.p)}}}{{{a1.q}}}x')
+                else:
+                    if a1 == 1:     parts.append(' + x')
+                    elif a1 == -1:  parts.append(' - x')
+                    elif a1.q == 1:
+                        parts.append(f' + {int(a1)}x' if a1 > 0 else f' - {abs(int(a1))}x')
+                    else:
+                        sign = '+' if a1.p > 0 else '-'
+                        parts.append(f' {sign} \\dfrac{{{abs(a1.p)}}}{{{a1.q}}}x')
+            # terme constant
+            if a0 != 0:
+                if not parts:
+                    parts.append(_fmt_rational(a0))
+                else:
+                    if a0.q == 1:
+                        parts.append(f' + {int(a0)}' if a0 > 0 else f' - {abs(int(a0))}')
+                    else:
+                        sign = '+' if a0.p > 0 else '-'
+                        parts.append(f' {sign} \\dfrac{{{abs(a0.p)}}}{{{a0.q}}}')
+            return ''.join(parts) if parts else '0'
+
         for i in range(n):
-            a=random.choice([1,-1])*random.randint(2,9)
-            b=0 if i<ns else random.choice([1,-1])*random.randint(2,9)
-            c=random.choice([1,-1])*random.randint(2,9); d=random.choice([1,-1])*random.randint(2,9)
-            expr=(a*x+b)*(c*x+d); result=expand(expr)
-            et.append(str(expr).replace('**','^').replace('*',''))
-            st.append(str(result).replace('**','^').replace('*',''))
-            q_diff = 2.0 + _multiplication_weight(a,c) + _multiplication_weight(a,d)
+            a = Rational(random.choice([1,-1])*random.randint(2,9))
+            c = Rational(random.choice([1,-1])*random.randint(2,9))
+            if use_frac:
+                b = Rational(0) if i < ns else _rand_frac(denominators=(2,3,4))
+                d = _rand_frac(denominators=(2,3,4))
+            else:
+                b = Rational(0) if i < ns else Rational(random.choice([1,-1])*random.randint(2,9))
+                d = Rational(random.choice([1,-1])*random.randint(2,9))
+
+            expr = (a*x + b) * (c*x + d)
+            result = expand(expr)
+
+            # ── Formatage ──
+            factor1_str = _fmt_factor(a, b)
+            factor2_str = _fmt_factor(c, d)
+            enonce_str  = f"{factor1_str}{factor2_str}"
+            result_str  = _fmt_poly2_rational(result)
+
+            et.append(enonce_str)
+            st.append(result_str)
+
+            # ── Difficulté cognitive ──
+            q_diff = 2.0 + _multiplication_weight(abs(float(a)), abs(float(c)))
+            q_diff += _multiplication_weight(abs(float(a)), abs(float(d)))
             if b != 0:
-                q_diff += _multiplication_weight(b,c) + _multiplication_weight(b,d) + _addition_weight(abs(a*d), abs(b*c)) + 1.0
-            q_diff += 0.4 * sum(1 for v in [a,b,c,d] if v<0)
+                q_diff += _multiplication_weight(abs(float(b)), abs(float(c)))
+                q_diff += _multiplication_weight(abs(float(b)), abs(float(d)))
+                q_diff += _addition_weight(abs(float(a*d)), abs(float(b*c))) + 1.0
+                if use_frac:
+                    q_diff += _rational_cognitive_cost(b) + _rational_cognitive_cost(d) + 1.0
+            q_diff += 0.4 * sum(1 for v in [float(a),float(b),float(c),float(d)] if v<0)
             total_diff += q_diff
+
         enonce = "\\noindent\\textbf{Exercice} -- Développer et réduire.\n\\begin{enumerate}\n"
         for e in et: enonce += f"\\item ${e}$\n"
         enonce += "\\end{enumerate}\n"
@@ -562,69 +943,173 @@ class Equations3e(ExerciseGenerator):
             {'key':'nb_questions','label':'Nombre de questions','type':'int','default':5,'min':2,'max':10},
             {'key':'niveau','label':'Difficulté','type':'choice','default':'Progressif',
              'choices':['Simple (ax=b)','Moyen (ax+b=c)','Complet (ax+b=cx+d)','Progressif']},
+            {'key':'avec_fractions','label':'Avec fractions','type':'choice','default':'Non',
+             'choices':['Non','Oui']},
         ]
     def generate(self, config):
         config = self._resolve_difficulty(config)
         n=config.get('nb_questions',5); niveau=config.get('niveau','Progressif')
+        use_frac = config.get('avec_fractions','Non') == 'Oui'
         et,st,corriges=[],[],[]; total_diff=0.0
+
+        # ─────────────────────────────────────────────────────────────────────
+        # Helper : résout a_r·x + b_r = c_r·x + d_r (tous Rational)
+        # Stratégie PPCM : multiplie par le PPCM pour obtenir une éq. entière.
+        # ─────────────────────────────────────────────────────────────────────
+        def _frac_eq(a_r, b_r, c_r, d_r):
+            from math import lcm as _lcm_f
+            a_r, b_r, c_r, d_r = (Rational(v) for v in (a_r, b_r, c_r, d_r))
+            denoms = [r.q for r in (a_r, b_r, c_r, d_r) if r != 0]
+            N = 1
+            for dv in denoms: N = _lcm_f(N, int(dv))
+            A = int(a_r*N); B = int(b_r*N)
+            C = int(c_r*N); D = int(d_r*N)
+            cd = A - C
+            if cd == 0: return None, None, None
+            cn = D - B
+            sol = Rational(cn, cd)
+            sol_l = latex(sol).replace('\\frac','\\dfrac')
+            eq_str = f"{_fmt_rational_linear(a_r,b_r)} = {_fmt_rational_linear(c_r,d_r)}"
+            lhs_cl = _fmt_rational_linear(A, B)
+            rhs_cl = _fmt_rational_linear(C, D)
+            # Résolution de l'équation entière (après PPCM)
+            if C == 0:   # forme ax = d−b
+                rhs_val = D - B
+                if B != 0:
+                    # Transposition nécessaire : montrer Ax = rhs_val
+                    if _needs_fraction_simplification(rhs_val, A):
+                        res = (f"$\\Leftrightarrow {_fmt_lx(A)} = {rhs_val}$\n\n"
+                               f"$\\Leftrightarrow x = {_display_fraction_latex(rhs_val,A)}$\n\n"
+                               f"$\\Leftrightarrow x = {sol_l}$")
+                    else:
+                        res = (f"$\\Leftrightarrow {_fmt_lx(A)} = {rhs_val}$\n\n"
+                               f"$\\Leftrightarrow x = {sol_l}$")
+                else:
+                    # B=0 : après PPCM on a déjà Ax = D — on divise directement
+                    if _needs_fraction_simplification(rhs_val, A):
+                        res = (f"$\\Leftrightarrow x = {_display_fraction_latex(rhs_val,A)}$\n\n"
+                               f"$\\Leftrightarrow x = {sol_l}$")
+                    else:
+                        res = f"$\\Leftrightarrow x = {sol_l}$"
+            else:        # forme (a−c)x = d−b
+                if _needs_fraction_simplification(cn, cd):
+                    res = (f"$\\Leftrightarrow {_fmt_lx(cd)} = {cn}$\n\n"
+                           f"$\\Leftrightarrow x = {_display_fraction_latex(cn,cd)}$\n\n"
+                           f"$\\Leftrightarrow x = {sol_l}$")
+                else:
+                    res = (f"$\\Leftrightarrow {_fmt_lx(cd)} = {cn}$\n\n"
+                           f"$\\Leftrightarrow x = {sol_l}$")
+            if N == 1:
+                detail = f"${eq_str}$\n\n{res}"
+            else:
+                detail = (f"${eq_str}$\n\n"
+                          f"On multiplie les deux membres par ${N}$ :\n\n"
+                          f"$\\Leftrightarrow {lhs_cl} = {rhs_cl}$\n\n"
+                          f"{res}")
+            return eq_str, detail, sol
+
+        # ─────────────────────────────────────────────────────────────────────
+        # Génération des exercices
+        # ─────────────────────────────────────────────────────────────────────
+        def _rf():  return _rand_frac(denominators=(2,3,4))
+        def _ri(lo=2,hi=9,nonzero1=True):
+            v = random.choice([1,-1])*random.randint(lo,hi)
+            return Rational(v)
+
         for i in range(n):
             if niveau=='Progressif':
                 lev = 'simple' if i<n//3 else ('moyen' if i<2*n//3 else 'complet')
             else:
                 lev = 'simple' if niveau.startswith('Simple') else ('moyen' if niveau.startswith('Moyen') else 'complet')
-            if lev=='simple':
-                a=random.choice([j for j in range(-9,10) if j not in [0,1]]); bv=random.choice([j for j in range(-20,21) if j!=0])
-                eq=f"{_fmt_lx(a)} = {bv}"; sol=Rational(bv,a); q_diff=1.5+_fraction_cost(bv,a)
-                sol_l=latex(sol).replace('\\frac','\\dfrac')
-                # Étape de simplification seulement si la fraction n'est pas déjà irréductible
-                if _needs_fraction_simplification(bv, a):
-                    detail = (f"${eq}$\n\n"
-                              f"$\\Leftrightarrow x = {_display_fraction_latex(bv, a)}$\n\n"
-                              f"$\\Leftrightarrow x = {sol_l}$")
+
+            if use_frac:
+                # ── Tous les coefficients sont des fractions ──────────────────
+                if lev == 'simple':
+                    a_r = _rf()          # coef de x (fraction)
+                    b_r = Rational(0)
+                    c_r = Rational(0)
+                    d_r = _rf()          # RHS
+                elif lev == 'moyen':
+                    a_r = _rf()
+                    b_r = _rf()
+                    c_r = Rational(0)
+                    d_r = _rf()
                 else:
-                    detail = f"${eq}$\n\n$\\Leftrightarrow x = {sol_l}$"
-            elif lev=='moyen':
-                a=random.choice([j for j in range(-9,10) if j not in [0,1]])
-                bv=random.choice([1,-1])*random.randint(1,15); cv=random.choice([1,-1])*random.randint(1,15)
-                eq=f"{str(a*x+bv).replace('*','')} = {cv}"; sol=Rational(cv-bv,a)
-                sol_l=latex(sol).replace('\\frac','\\dfrac'); rhs=cv-bv
-                # Séparation : transposition (une égalité) | calcul | division | [simplification]
-                if _needs_fraction_simplification(rhs, a):
-                    detail = (f"${eq}$\n\n"
-                              f"$\\Leftrightarrow {_fmt_lx(a)} = {cv} - ({bv})$\n\n"
-                              f"$\\Leftrightarrow {_fmt_lx(a)} = {rhs}$\n\n"
-                              f"$\\Leftrightarrow x = {_display_fraction_latex(rhs, a)}$\n\n"
-                              f"$\\Leftrightarrow x = {sol_l}$")
-                else:
-                    detail = (f"${eq}$\n\n"
-                              f"$\\Leftrightarrow {_fmt_lx(a)} = {cv} - ({bv})$\n\n"
-                              f"$\\Leftrightarrow {_fmt_lx(a)} = {rhs}$\n\n"
-                              f"$\\Leftrightarrow x = {sol_l}$")
-                q_diff=3.0+_addition_weight(abs(cv),abs(bv))+_fraction_cost(rhs,a)
+                    for _ in range(50):
+                        a_r = _rf(); c_r = _rf()
+                        if a_r != c_r: break
+                    b_r = _rf(); d_r = _rf()
+
+                eq_str, detail, sol = _frac_eq(a_r, b_r, c_r, d_r)
+                if eq_str is None:   # dégénéré — très rare, on retente
+                    a_r = _rf(); b_r = _rf(); c_r = Rational(0); d_r = _rf()
+                    eq_str, detail, sol = _frac_eq(a_r, b_r, c_r, d_r)
+                sol_l = latex(sol).replace('\\frac','\\dfrac')
+                q_diff = (2.0 + _rational_cognitive_cost(a_r) + _rational_cognitive_cost(b_r)
+                          + _rational_cognitive_cost(c_r) + _rational_cognitive_cost(d_r) + 1.5)
+                if lev == 'simple':   q_diff = 2.0 + _rational_cognitive_cost(a_r) + _rational_cognitive_cost(d_r) + 1.0
+                if lev == 'complet':  q_diff += 1.0
+
             else:
-                while True:
-                    a=random.choice([1,-1])*random.randint(2,9); bv=random.choice([1,-1])*random.randint(1,12)
-                    cv=random.choice([1,-1])*random.randint(2,9); dv=random.choice([1,-1])*random.randint(1,12)
-                    if a!=cv: break
-                eq=f"{str(a*x+bv).replace('*','')} = {str(cv*x+dv).replace('*','')}"; sol=Rational(dv-bv,a-cv)
-                sol_l=latex(sol).replace('\\frac','\\dfrac')
-                cd=a-cv; cn=dv-bv
-                if _needs_fraction_simplification(cn, cd):
-                    detail = (f"${eq}$\n\n"
-                              f"$\\Leftrightarrow {_fmt_lx(cd)} = {cn}$\n\n"
-                              f"$\\Leftrightarrow x = {_display_fraction_latex(cn, cd)}$\n\n"
-                              f"$\\Leftrightarrow x = {sol_l}$")
+                # ── Coefficients entiers (comportement original) ──────────────
+                if lev=='simple':
+                    a=random.choice([j for j in range(-9,10) if j not in [0,1]])
+                    bv=random.choice([j for j in range(-20,21) if j!=0]); bv=Rational(bv)
+                    sol=Rational(bv,a); sol_l=latex(sol).replace('\\frac','\\dfrac')
+                    eq_str=f"{_fmt_lx(a)} = {int(bv)}"
+                    if _needs_fraction_simplification(int(bv),a):
+                        detail=(f"${eq_str}$\n\n"
+                                f"$\\Leftrightarrow x = {_display_fraction_latex(int(bv),a)}$\n\n"
+                                f"$\\Leftrightarrow x = {sol_l}$")
+                    else:
+                        detail=f"${eq_str}$\n\n$\\Leftrightarrow x = {sol_l}$"
+                    q_diff=1.5+_fraction_cost(int(bv),a)
+                elif lev=='moyen':
+                    a=random.choice([j for j in range(-9,10) if j not in [0,1]])
+                    bv=Rational(random.choice([1,-1])*random.randint(1,15))
+                    cv=Rational(random.choice([1,-1])*random.randint(1,15))
+                    rhs=int(cv-bv); sol=Rational(rhs,a); sol_l=latex(sol).replace('\\frac','\\dfrac')
+                    eq_str=f"{_fmt_lx(a)} + {int(bv)} = {int(cv)}"
+                    if bv < 0: eq_str=f"{_fmt_lx(a)} - {abs(int(bv))} = {int(cv)}"
+                    if _needs_fraction_simplification(rhs,a):
+                        detail=(f"${eq_str}$\n\n"
+                                f"$\\Leftrightarrow {_fmt_lx(a)} = {int(cv)} - ({int(bv)})$\n\n"
+                                f"$\\Leftrightarrow {_fmt_lx(a)} = {rhs}$\n\n"
+                                f"$\\Leftrightarrow x = {_display_fraction_latex(rhs,a)}$\n\n"
+                                f"$\\Leftrightarrow x = {sol_l}$")
+                    else:
+                        detail=(f"${eq_str}$\n\n"
+                                f"$\\Leftrightarrow {_fmt_lx(a)} = {int(cv)} - ({int(bv)})$\n\n"
+                                f"$\\Leftrightarrow {_fmt_lx(a)} = {rhs}$\n\n"
+                                f"$\\Leftrightarrow x = {sol_l}$")
+                    q_diff=3.0+_addition_weight(abs(int(cv)),abs(int(bv)))+_fraction_cost(rhs,a)
                 else:
-                    detail = (f"${eq}$\n\n"
-                              f"$\\Leftrightarrow {_fmt_lx(cd)} = {cn}$\n\n"
-                              f"$\\Leftrightarrow x = {sol_l}$")
-                q_diff=5.0+_addition_weight(abs(a),abs(cv))+_addition_weight(abs(dv),abs(bv))+_fraction_cost(cn,cd)
-                q_diff+=0.5*sum(1 for v in [a,bv,cv,dv] if v<0)
+                    while True:
+                        a=random.choice([1,-1])*random.randint(2,9); cv_a=random.choice([1,-1])*random.randint(2,9)
+                        if a!=cv_a: break
+                    bv=Rational(random.choice([1,-1])*random.randint(1,12))
+                    dv=Rational(random.choice([1,-1])*random.randint(1,12))
+                    cd=a-cv_a; cn=int(dv-bv); sol=Rational(cn,cd); sol_l=latex(sol).replace('\\frac','\\dfrac')
+                    eq_str=f"{_fmt_lx(a)} + {int(bv)} = {_fmt_lx(cv_a)} + {int(dv)}"
+                    if bv<0: eq_str=eq_str.replace(f"+ {int(bv)}",f"- {abs(int(bv))}")
+                    if dv<0: eq_str=eq_str.replace(f"+ {int(dv)}",f"- {abs(int(dv))}")
+                    if _needs_fraction_simplification(cn,cd):
+                        detail=(f"${eq_str}$\n\n"
+                                f"$\\Leftrightarrow {_fmt_lx(cd)} = {cn}$\n\n"
+                                f"$\\Leftrightarrow x = {_display_fraction_latex(cn,cd)}$\n\n"
+                                f"$\\Leftrightarrow x = {sol_l}$")
+                    else:
+                        detail=(f"${eq_str}$\n\n"
+                                f"$\\Leftrightarrow {_fmt_lx(cd)} = {cn}$\n\n"
+                                f"$\\Leftrightarrow x = {sol_l}$")
+                    q_diff=5.0+_addition_weight(abs(a),abs(cv_a))+_addition_weight(abs(int(dv)),abs(int(bv)))+_fraction_cost(cn,cd)
+                    q_diff+=0.5*sum(1 for v in [a,int(bv),cv_a,int(dv)] if v<0)
+
             sol_set = f"S = \\left\\{{{sol_l}\\right\\}}"
             detail += f"\n\nL'ensemble des solutions est ${sol_set}$."
-            et.append(eq); st.append(sol_set); corriges.append(detail)
+            et.append(eq_str); st.append(sol_set); corriges.append(detail)
             total_diff += q_diff
-        sol_only = [s for s in st]  # S={...} strings
+
         enonce = "\\noindent\\textbf{Exercice} -- Résoudre les équations suivantes.\n\\begin{enumerate}\n"
         for e in et: enonce += f"\\item ${e}$\n"
         enonce += "\\end{enumerate}\n"
@@ -644,33 +1129,97 @@ class EquationsProduit3e(ExerciseGenerator):
     difficulty_config = {'Facile':{'nb_questions':3},'Moyen':{'nb_questions':4},'Difficile':{'nb_questions':6}}
     @staticmethod
     def get_config():
-        return [{'key':'nb_questions','label':'Nombre de questions','type':'int','default':4,'min':2,'max':8}]
+        return [
+            {'key':'nb_questions','label':'Nombre de questions','type':'int','default':4,'min':2,'max':8},
+            {'key':'avec_fractions','label':'Avec fractions','type':'choice','default':'Non',
+             'choices':['Non','Oui']},
+        ]
     def generate(self, config):
         config = self._resolve_difficulty(config)
-        n=config.get('nb_questions',4); et,st,corriges=[],[],[]; total_diff=0.0
+        n=config.get('nb_questions',4)
+        use_frac = config.get('avec_fractions','Non') == 'Oui'
+        et,st,corriges=[],[],[]; total_diff=0.0
         for _ in range(n):
-            a=random.choice([1,-1])*random.randint(1,7); b=random.choice([1,-1])*random.randint(1,9)
-            c=random.choice([1,-1])*random.randint(1,7); d=random.choice([1,-1])*random.randint(1,9)
-            lhs=(a*x+b)*(c*x+d); s1=Rational(-b,a); s2=Rational(-d,c)
-            et.append(f"{str(lhs).replace('**','^').replace('*','')} = 0")
+            a=random.choice([1,-1])*random.randint(1,7)
+            c=random.choice([1,-1])*random.randint(1,7)
+            if use_frac:
+                b = _rand_frac(denominators=(2,3,4))
+                d = _rand_frac(denominators=(2,3,4))
+            else:
+                b = Rational(random.choice([1,-1])*random.randint(1,9))
+                d = Rational(random.choice([1,-1])*random.randint(1,9))
+
+            s1 = -b / a   # solution du facteur (ax+b)=0
+            s2 = -d / c   # solution du facteur (cx+d)=0
+            s1l = latex(s1).replace('\\frac','\\dfrac')
+            s2l = latex(s2).replace('\\frac','\\dfrac')
+
+            # ── Formatage de l'énoncé avec \left( \right) ──
+            fac1_str = _fmt_rational_linear(a, b)
+            fac2_str = _fmt_rational_linear(c, d)
+            enonce_str = f"\\left({fac1_str}\\right)\\left({fac2_str}\\right) = 0"
+
+            # ── Ensemble solution ──
             if s1 == s2:
-                s1l=latex(s1).replace('\\frac','\\dfrac')
-                st.append(f"S = \\left\\{{{s1l}\\right\\}}")
+                sol_set = f"S = \\left\\{{{s1l}\\right\\}}"
             else:
                 ordered = sorted([s1, s2])
-                o1=latex(ordered[0]).replace('\\frac','\\dfrac')
-                o2=latex(ordered[1]).replace('\\frac','\\dfrac')
-                st.append(f"S = \\left\\{{{o1} \\; ; \\; {o2}\\right\\}}")
-            s1l=latex(s1).replace('\\frac','\\dfrac'); s2l=latex(s2).replace('\\frac','\\dfrac')
-            fac1=str(a*x+b).replace('*',''); fac2=str(c*x+d).replace('*','')
+                o1 = latex(ordered[0]).replace('\\frac','\\dfrac')
+                o2 = latex(ordered[1]).replace('\\frac','\\dfrac')
+                sol_set = f"S = \\left\\{{{o1} \\; ; \\; {o2}\\right\\}}"
+
+            # ── Corrigé : résolution de chaque facteur ──
+            # Facteur 1 : ax + b = 0
+            if b == 0:
+                # ax = 0 → x = 0
+                step1 = f"${fac1_str} = 0 \\Leftrightarrow {_fmt_lx(a)} = 0 \\Leftrightarrow x = 0$"
+            else:
+                neg_b = _fmt_rational(-b)
+                if use_frac and b.q != 1:
+                    # Montrer l'étape de transposition : ax = -b
+                    step1 = (f"${fac1_str} = 0$\n\n"
+                             f"$\\Leftrightarrow {_fmt_lx(a)} = {neg_b}$\n\n"
+                             f"$\\Leftrightarrow x = {s1l}$")
+                else:
+                    if _needs_fraction_simplification(int(-b), a):
+                        step1 = (f"${fac1_str} = 0$\n\n"
+                                 f"$\\Leftrightarrow {_fmt_lx(a)} = {int(-b)}$\n\n"
+                                 f"$\\Leftrightarrow x = {_display_fraction_latex(int(-b), a)}$\n\n"
+                                 f"$\\Leftrightarrow x = {s1l}$")
+                    else:
+                        step1 = f"${fac1_str} = 0 \\Leftrightarrow x = {s1l}$"
+
+            # Facteur 2 : cx + d = 0
+            if d == 0:
+                step2 = f"${fac2_str} = 0 \\Leftrightarrow {_fmt_lx(c)} = 0 \\Leftrightarrow x = 0$"
+            else:
+                neg_d = _fmt_rational(-d)
+                if use_frac and d.q != 1:
+                    step2 = (f"${fac2_str} = 0$\n\n"
+                             f"$\\Leftrightarrow {_fmt_lx(c)} = {neg_d}$\n\n"
+                             f"$\\Leftrightarrow x = {s2l}$")
+                else:
+                    if _needs_fraction_simplification(int(-d), c):
+                        step2 = (f"${fac2_str} = 0$\n\n"
+                                 f"$\\Leftrightarrow {_fmt_lx(c)} = {int(-d)}$\n\n"
+                                 f"$\\Leftrightarrow x = {_display_fraction_latex(int(-d), c)}$\n\n"
+                                 f"$\\Leftrightarrow x = {s2l}$")
+                    else:
+                        step2 = f"${fac2_str} = 0 \\Leftrightarrow x = {s2l}$"
+
             corriges.append(
                 f"Un produit est nul si et seulement si l'un des facteurs est nul.\n\n"
-                f"$\\bullet\\ {fac1} = 0 \\Leftrightarrow x = {s1l}$\n\n"
-                f"$\\bullet\\ {fac2} = 0 \\Leftrightarrow x = {s2l}$\n\n"
-                f"Donc ${st[-1]}$")
-            q_diff = 2.0 + _fraction_cost(-b,a) + _fraction_cost(-d,c)
-            q_diff += 0.3 * sum(1 for v in [a,b,c,d] if v<0)
+                f"$\\bullet$\\ {step1}\n\n"
+                f"$\\bullet$\\ {step2}\n\n"
+                f"Donc ${sol_set}$")
+
+            et.append(enonce_str); st.append(sol_set)
+            q_diff = 2.0 + _fraction_cost(int((-b).p), int((-b).q)) + _fraction_cost(int((-d).p), int((-d).q))
+            q_diff += 0.3 * sum(1 for v in [float(b), float(d)] if v < 0)
+            if use_frac:
+                q_diff += _rational_cognitive_cost(b) + _rational_cognitive_cost(d)
             total_diff += q_diff
+
         enonce = "\\noindent\\textbf{Exercice} -- Résoudre les équations suivantes.\n\\begin{enumerate}\n"
         for e in et: enonce += f"\\item ${e}$\n"
         enonce += "\\end{enumerate}\n"
@@ -931,6 +1480,8 @@ class Inequations2nde(ExerciseGenerator):
         return [
             {'key':'nb_questions','label':'Nombre de questions','type':'int','default':6,'min':2,'max':12},
             {'key':'niveau_max','label':'Niveau max (1-4)','type':'int','default':3,'min':1,'max':4},
+            {'key':'avec_fractions','label':'Avec fractions','type':'choice','default':'Non',
+             'choices':['Non','Oui']},
         ]
     def _ok(self, ineq):
         try:
@@ -943,74 +1494,194 @@ class Inequations2nde(ExerciseGenerator):
     def generate(self, config):
         config = self._resolve_difficulty(config)
         n=config.get('nb_questions',6); nmax=config.get('niveau_max',3)
+        use_frac = config.get('avec_fractions','Non') == 'Oui'
         comps=[Lt,Gt,Le,Ge]; et,st,corriges=[],[],[]; total_diff=0.0
+
+        _csym = {Lt: '<', Gt: '>', Le: r'\leq', Ge: r'\geq'}
+        _fsym = {Lt: '>', Gt: '<', Le: r'\geq', Ge: r'\leq'}
+
         for i in range(n):
             level=min((i*nmax)//n+1,nmax)
-            cr=[random.choice([1,-1])*j for j in range(2,10)]; co=cr[:]
-            while True:
-                a,b,c,d,e=random.choice(cr),random.choice(co),random.choice(co),random.choice(co),random.choice(cr)
-                if level==1: e1,e2=a*x,b
-                elif level==2: e1,e2=a*x+b,c
-                elif level==3: e1,e2=a*x+b,e*x+d
-                else: e1=factor(a*(x+b)); e2=c*x+d
-                comp=random.choice(comps); ineq=comp(e1,e2)
+            # Coefficients en x — toujours entiers non nuls (±2..±9)
+            cr=[random.choice([1,-1])*j for j in range(2,10)]
+
+            # Termes constants — entiers ou rationnels selon le mode
+            def _cst():
+                if use_frac: return _rand_frac(denominators=(2,3,4))
+                return Rational(random.choice([random.choice([1,-1])*j for j in range(1,10)]))
+
+            for _ in range(200):
+                a = random.choice(cr)
+                b_r = _cst(); c_r = _cst(); d_r = _cst()
+                e   = random.choice(cr)
+                b, c, d = b_r, c_r, d_r
+                if level==1:   e1, e2 = a*x, b
+                elif level==2: e1, e2 = a*x + b, c
+                elif level==3: e1, e2 = a*x + b, e*x + d
+                else:          e1 = factor(a*(x + b)); e2 = c*x + d
+                comp = random.choice(comps); ineq = comp(e1, e2)
                 if self._ok(ineq): break
-            sol=solve_univariate_inequality(ineq,x,relational=False)
-            et.append(latex(ineq)); st.append(interval_from_solution(sol))
-            # Difficulté
-            q_diff = 1.5 * level + 1.0  # Méthode + complexité croissante
-            if level >= 3: q_diff += 1.5  # Regrouper les x
-            if a < 0 or (level >= 3 and e < 0): q_diff += 1.0  # Inversion du sens
-            total_diff += q_diff
-            # Corrigé détaillé — résolution étape par étape
+
+            sol = solve_univariate_inequality(ineq, x, relational=False)
             sol_latex = interval_from_solution(sol)
-            _csym = {Lt: '<', Gt: '>', Le: r'\leq', Ge: r'\geq'}
-            _fsym = {Lt: '>', Gt: '<', Le: r'\geq', Ge: r'\leq'}
-            cs = _csym[comp]
+            # Énoncé — latex() gère les rationnels
+            et.append(latex(ineq).replace('\\frac','\\dfrac'))
+            st.append(sol_latex)
+
+            # ── Difficulté cognitive ──
+            q_diff = 1.5 * level + 1.0
+            if level >= 3: q_diff += 1.5
+            if a < 0 or (level >= 3 and e < 0): q_diff += 1.0
+            if use_frac:
+                q_diff += _rational_cognitive_cost(b) + _rational_cognitive_cost(c)
+                if level >= 3: q_diff += _rational_cognitive_cost(d) + 1.0
+            total_diff += q_diff
+
+            # ── Corrigé détaillé avec gestion des rationnels ──
+            cs  = _csym[comp]
             def _lx(coef):
                 if coef == 1: return 'x'
                 if coef == -1: return '-x'
                 return f"{coef}x"
+
+            from math import lcm as _lcm_local
+
+            def _clear_fracs_step(lhs_expr, rhs_expr, a_int):
+                """Si des fractions sont présentes, retourne l'étape de multiplication par PPCM."""
+                # Collecter les dénominateurs des termes constants
+                dens = []
+                for v in [b, c, d]:
+                    vr = Rational(v)
+                    if vr.q != 1: dens.append(int(vr.q))
+                if not dens: return None, a_int, int(Rational(rhs_expr - lhs_expr + a_int * x).subs(x, 0))
+                ppcm = dens[0]
+                for dv in dens[1:]: ppcm = _lcm_local(ppcm, dv)
+                return ppcm, a_int, None
+
             if level == 1:
+                # a·x  cs  b
                 cs2 = _fsym[comp] if a < 0 else cs
-                rhs_l = latex(Rational(b, a)).replace('\\frac', '\\dfrac')
-                if _needs_fraction_simplification(b, a):
-                    detail = (f"${_lx(a)} {cs} {b}$\n\n"
-                              f"$\\Leftrightarrow x {cs2} {_display_fraction_latex(b, a)}$\n\n"
-                              f"$\\Leftrightarrow x {cs2} {rhs_l}$")
+                sol_val = Rational(b, a)
+                sol_l = latex(sol_val).replace('\\frac','\\dfrac')
+                b_str = _fmt_rational(b)
+                if use_frac and Rational(b).q != 1:
+                    ppcm = int(Rational(b).q)
+                    a_new = a * ppcm
+                    b_new = int(Rational(b) * ppcm)
+                    sol2_l = latex(Rational(b_new, a_new)).replace('\\frac','\\dfrac')
+                    if _needs_fraction_simplification(b_new, a_new):
+                        detail = (f"${_lx(a)} {cs} {b_str}$\n\n"
+                                  f"On multiplie par ${ppcm}$ :\n\n"
+                                  f"$\\Leftrightarrow {_lx(a_new)} {cs} {b_new}$\n\n"
+                                  f"$\\Leftrightarrow x {cs2} {_display_fraction_latex(b_new, a_new)}$\n\n"
+                                  f"$\\Leftrightarrow x {cs2} {sol2_l}$")
+                    else:
+                        detail = (f"${_lx(a)} {cs} {b_str}$\n\n"
+                                  f"On multiplie par ${ppcm}$ :\n\n"
+                                  f"$\\Leftrightarrow {_lx(a_new)} {cs} {b_new}$\n\n"
+                                  f"$\\Leftrightarrow x {cs2} {sol2_l}$")
                 else:
-                    detail = (f"${_lx(a)} {cs} {b}$\n\n"
-                              f"$\\Leftrightarrow x {cs2} {rhs_l}$")
+                    b_int = int(Rational(b))
+                    if _needs_fraction_simplification(b_int, a):
+                        detail = (f"${_lx(a)} {cs} {b_str}$\n\n"
+                                  f"$\\Leftrightarrow x {cs2} {_display_fraction_latex(b_int, a)}$\n\n"
+                                  f"$\\Leftrightarrow x {cs2} {sol_l}$")
+                    else:
+                        detail = (f"${_lx(a)} {cs} {b_str}$\n\n"
+                                  f"$\\Leftrightarrow x {cs2} {sol_l}$")
+
             elif level == 2:
+                # a·x + b  cs  c
                 cs2 = _fsym[comp] if a < 0 else cs
-                rhs1 = c - b
-                rhs_l = latex(Rational(rhs1, a)).replace('\\frac', '\\dfrac')
-                # Séparation stricte : une seule (in)égalité par ⟺
-                if _needs_fraction_simplification(rhs1, a):
-                    detail = (f"${latex(e1)} {cs} {c}$\n\n"
-                              f"$\\Leftrightarrow {_lx(a)} {cs} {c} - ({b})$\n\n"
-                              f"$\\Leftrightarrow {_lx(a)} {cs} {rhs1}$\n\n"
-                              f"$\\Leftrightarrow x {cs2} {_display_fraction_latex(rhs1, a)}$\n\n"
-                              f"$\\Leftrightarrow x {cs2} {rhs_l}$")
+                rhs_r = Rational(c) - Rational(b)
+                b_str = _fmt_rational(b); c_str = _fmt_rational(c)
+                lhs_str = _fmt_rational_linear(a, b)
+                if use_frac and (Rational(b).q != 1 or Rational(c).q != 1):
+                    dens = [Rational(b).q, Rational(c).q]
+                    ppcm = dens[0]
+                    for dv in dens[1:]: ppcm = _lcm_local(ppcm, dv)
+                    a_new = a * ppcm
+                    b_new = int(Rational(b) * ppcm)
+                    c_new = int(Rational(c) * ppcm)
+                    rhs_new = c_new - b_new
+                    sol2 = Rational(rhs_new, a_new)
+                    sol2_l = latex(sol2).replace('\\frac','\\dfrac')
+                    if _needs_fraction_simplification(rhs_new, a_new):
+                        detail = (f"${lhs_str} {cs} {c_str}$\n\n"
+                                  f"On multiplie par ${ppcm}$ :\n\n"
+                                  f"$\\Leftrightarrow {_fmt_rational_linear(a_new, b_new)} {cs} {c_new}$\n\n"
+                                  f"$\\Leftrightarrow {_lx(a_new)} {cs} {rhs_new}$\n\n"
+                                  f"$\\Leftrightarrow x {cs2} {_display_fraction_latex(rhs_new, a_new)}$\n\n"
+                                  f"$\\Leftrightarrow x {cs2} {sol2_l}$")
+                    else:
+                        detail = (f"${lhs_str} {cs} {c_str}$\n\n"
+                                  f"On multiplie par ${ppcm}$ :\n\n"
+                                  f"$\\Leftrightarrow {_fmt_rational_linear(a_new, b_new)} {cs} {c_new}$\n\n"
+                                  f"$\\Leftrightarrow {_lx(a_new)} {cs} {rhs_new}$\n\n"
+                                  f"$\\Leftrightarrow x {cs2} {sol2_l}$")
                 else:
-                    detail = (f"${latex(e1)} {cs} {c}$\n\n"
-                              f"$\\Leftrightarrow {_lx(a)} {cs} {c} - ({b})$\n\n"
-                              f"$\\Leftrightarrow {_lx(a)} {cs} {rhs1}$\n\n"
-                              f"$\\Leftrightarrow x {cs2} {rhs_l}$")
+                    rhs1 = int(rhs_r)
+                    sol_val = Rational(rhs1, a)
+                    sol_l = latex(sol_val).replace('\\frac','\\dfrac')
+                    if _needs_fraction_simplification(rhs1, a):
+                        detail = (f"${lhs_str} {cs} {c_str}$\n\n"
+                                  f"$\\Leftrightarrow {_lx(a)} {cs} {c_str} - ({b_str})$\n\n"
+                                  f"$\\Leftrightarrow {_lx(a)} {cs} {rhs1}$\n\n"
+                                  f"$\\Leftrightarrow x {cs2} {_display_fraction_latex(rhs1, a)}$\n\n"
+                                  f"$\\Leftrightarrow x {cs2} {sol_l}$")
+                    else:
+                        detail = (f"${lhs_str} {cs} {c_str}$\n\n"
+                                  f"$\\Leftrightarrow {_lx(a)} {cs} {c_str} - ({b_str})$\n\n"
+                                  f"$\\Leftrightarrow {_lx(a)} {cs} {rhs1}$\n\n"
+                                  f"$\\Leftrightarrow x {cs2} {sol_l}$")
+
             else:
-                cd = a - e; cn = d - b
+                # Niveaux 3 et 4 : a·x + b  cs  e·x + d (ou factored)
+                lhs_sym = expand(e1); rhs_sym = expand(e2)
+                cd_sym = lhs_sym.coeff(x) - rhs_sym.coeff(x)    # coefficient de x du côté gauche
+                cn_r   = rhs_sym.subs(x,0) - lhs_sym.subs(x,0)  # terme constant
+                cd = int(cd_sym); cn_r = Rational(cn_r)
                 cs2 = _fsym[comp] if cd < 0 else cs
-                rhs_l = latex(Rational(cn, cd)).replace('\\frac', '\\dfrac')
-                if _needs_fraction_simplification(cn, cd):
-                    detail = (f"${latex(e1)} {cs} {latex(e2)}$\n\n"
-                              f"$\\Leftrightarrow {_lx(cd)} {cs} {cn}$\n\n"
-                              f"$\\Leftrightarrow x {cs2} {_display_fraction_latex(cn, cd)}$\n\n"
-                              f"$\\Leftrightarrow x {cs2} {rhs_l}$")
+                if use_frac and cn_r.q != 1:
+                    ppcm = int(cn_r.q)
+                    cd_new = cd * ppcm
+                    cn_new = int(cn_r * ppcm)
+                    sol2 = Rational(cn_new, cd_new)
+                    sol2_l = latex(sol2).replace('\\frac','\\dfrac')
+                    lhs_disp = latex(e1).replace('\\frac','\\dfrac')
+                    rhs_disp = latex(e2).replace('\\frac','\\dfrac')
+                    cn_str = _fmt_rational(cn_r)
+                    if _needs_fraction_simplification(cn_new, cd_new):
+                        detail = (f"${lhs_disp} {cs} {rhs_disp}$\n\n"
+                                  f"$\\Leftrightarrow {_lx(cd)} {cs} {cn_str}$\n\n"
+                                  f"On multiplie par ${ppcm}$ :\n\n"
+                                  f"$\\Leftrightarrow {_lx(cd_new)} {cs2} {cn_new}$\n\n"
+                                  f"$\\Leftrightarrow x {cs2} {_display_fraction_latex(cn_new, cd_new)}$\n\n"
+                                  f"$\\Leftrightarrow x {cs2} {sol2_l}$")
+                    else:
+                        detail = (f"${lhs_disp} {cs} {rhs_disp}$\n\n"
+                                  f"$\\Leftrightarrow {_lx(cd)} {cs} {cn_str}$\n\n"
+                                  f"On multiplie par ${ppcm}$ :\n\n"
+                                  f"$\\Leftrightarrow {_lx(cd_new)} {cs2} {cn_new}$\n\n"
+                                  f"$\\Leftrightarrow x {cs2} {sol2_l}$")
                 else:
-                    detail = (f"${latex(e1)} {cs} {latex(e2)}$\n\n"
-                              f"$\\Leftrightarrow {_lx(cd)} {cs} {cn}$\n\n"
-                              f"$\\Leftrightarrow x {cs2} {rhs_l}$")
+                    cn = int(cn_r)
+                    sol_val = Rational(cn, cd)
+                    sol_l = latex(sol_val).replace('\\frac','\\dfrac')
+                    lhs_disp = latex(e1).replace('\\frac','\\dfrac')
+                    rhs_disp = latex(e2).replace('\\frac','\\dfrac')
+                    if _needs_fraction_simplification(cn, cd):
+                        detail = (f"${lhs_disp} {cs} {rhs_disp}$\n\n"
+                                  f"$\\Leftrightarrow {_lx(cd)} {cs} {cn}$\n\n"
+                                  f"$\\Leftrightarrow x {cs2} {_display_fraction_latex(cn, cd)}$\n\n"
+                                  f"$\\Leftrightarrow x {cs2} {sol_l}$")
+                    else:
+                        detail = (f"${lhs_disp} {cs} {rhs_disp}$\n\n"
+                                  f"$\\Leftrightarrow {_lx(cd)} {cs} {cn}$\n\n"
+                                  f"$\\Leftrightarrow x {cs2} {sol_l}$")
+
             corriges.append(detail + f"\n\n$S = {sol_latex}$")
+
         enonce = "\\noindent\\textbf{Exercice} -- Résoudre les inéquations suivantes.\n\\begin{enumerate}\n"
         for e in et: enonce += f"\\item ${e}$\n"
         enonce += "\\end{enumerate}\n"
@@ -1252,53 +1923,106 @@ class Vecteurs2nde(ExerciseGenerator):
             {'key':'nb_coord','label':'Questions coordonnées','type':'int','default':3,'min':0,'max':6},
             {'key':'nb_milieu','label':'Questions milieu','type':'int','default':2,'min':0,'max':4},
             {'key':'nb_colin','label':'Questions colinéarité','type':'int','default':2,'min':0,'max':4},
+            {'key':'avec_fractions','label':'Avec fractions','type':'choice','default':'Non',
+             'choices':['Non','Oui']},
         ]
     def generate(self, config):
         config = self._resolve_difficulty(config)
+        use_frac = config.get('avec_fractions','Non') == 'Oui'
         enonce=""; corrige=""; ne=0; qr_vect=[]; total_diff=0.0
+
+        def _rand_coord():
+            """Coordonnée aléatoire : entière ou demi-entière selon le mode."""
+            if use_frac:
+                # Halves or thirds — les plus naturels pour des coordonnées
+                return _rand_frac(denominators=(2, 3), signed=True)
+            else:
+                return Rational(random.randint(-5, 5))
+
+        def _fmt_coord(r):
+            """Formate une coordonnée Rational pour l'affichage."""
+            r = Rational(r)
+            if r.q == 1: return str(int(r))
+            sign = '' if r.p >= 0 else '-'
+            return f"{sign}\\dfrac{{{abs(r.p)}}}{{{r.q}}}"
+
         nc=config.get('nb_coord',3)
         if nc>0:
             ne+=1
             enonce+=f"\\noindent\\textbf{{{ne})}} Calculer les coordonnées de ${vect('A','B')}$.\n\\begin{{enumerate}}\n"
             corrige+=f"\\textbf{{{ne})}}\n\\begin{{enumerate}}\n"
             for _ in range(nc):
-                ax,ay,bx,by=[random.randint(-5,5) for _ in range(4)]
-                enonce+=f"\\item ${pt('A')}({ax}\\,;\\,{ay})$ et ${pt('B')}({bx}\\,;\\,{by})$\n"
-                corrige+=f"\\item ${vect('A','B')}({bx-ax}\\,;\\,{by-ay})$\n"
-                qr_vect.append(f'AB({bx-ax};{by-ay})')
-                total_diff += 1.5 + _addition_weight(abs(bx),abs(ax)) + _addition_weight(abs(by),abs(ay))
+                ax,ay,bx,by = [_rand_coord() for _ in range(4)]
+                dx = bx - ax; dy = by - ay
+                ax_s,ay_s = _fmt_coord(ax),_fmt_coord(ay)
+                bx_s,by_s = _fmt_coord(bx),_fmt_coord(by)
+                dx_s,dy_s = _fmt_coord(dx),_fmt_coord(dy)
+                enonce+=f"\\item ${pt('A')}({ax_s}\\,;\\,{ay_s})$ et ${pt('B')}({bx_s}\\,;\\,{by_s})$\n"
+                corrige+=f"\\item ${vect('A','B')}({dx_s}\\,;\\,{dy_s})$\n"
+                qr_vect.append(f'AB({_plain(dx_s)};{_plain(dy_s)})')
+                total_diff += 1.5 + _addition_weight(abs(float(bx)),abs(float(ax))) + _addition_weight(abs(float(by)),abs(float(ay)))
+                if use_frac:
+                    total_diff += _rational_cognitive_cost(ax) + _rational_cognitive_cost(bx)
+                    total_diff += _rational_cognitive_cost(ay) + _rational_cognitive_cost(by)
             enonce+="\\end{enumerate}\n"; corrige+="\\end{enumerate}\n"
+
         nm=config.get('nb_milieu',2)
         if nm>0:
             ne+=1
             enonce+=f"\\medskip\n\\noindent\\textbf{{{ne})}} Calculer les coordonnées du milieu de $[{pt('A')}{pt('B')}]$.\n\\begin{{enumerate}}\n"
             corrige+=f"\\textbf{{{ne})}}\n\\begin{{enumerate}}\n"
             for _ in range(nm):
-                ax,ay,bx,by=[random.randint(-8,8) for _ in range(4)]
-                mx=Rational(ax+bx,2); my=Rational(ay+by,2)
-                enonce+=f"\\item ${pt('A')}({ax}\\,;\\,{ay})$ et ${pt('B')}({bx}\\,;\\,{by})$\n"
-                corrige+=f"\\item ${pt('M')}\\left({latex(mx).replace(chr(92)+'frac',chr(92)+'dfrac')}\\,;\\,{latex(my).replace(chr(92)+'frac',chr(92)+'dfrac')}\\right)$\n"
-                total_diff += 2.0 + _addition_weight(abs(ax),abs(bx)) + _addition_weight(abs(ay),abs(by)) + 0.8  # Division par 2
+                ax,ay,bx,by = [_rand_coord() for _ in range(4)]
+                mx = Rational(ax + bx, 2); my = Rational(ay + by, 2)
+                ax_s,ay_s = _fmt_coord(ax),_fmt_coord(ay)
+                bx_s,by_s = _fmt_coord(bx),_fmt_coord(by)
+                mx_s = _fmt_coord(mx); my_s = _fmt_coord(my)
+                enonce+=f"\\item ${pt('A')}({ax_s}\\,;\\,{ay_s})$ et ${pt('B')}({bx_s}\\,;\\,{by_s})$\n"
+                corrige+=f"\\item ${pt('M')}\\left({mx_s}\\,;\\,{my_s}\\right)$\n"
+                total_diff += 2.0 + _addition_weight(abs(float(ax)),abs(float(bx))) + _addition_weight(abs(float(ay)),abs(float(by))) + 0.8
+                if use_frac:
+                    total_diff += _rational_cognitive_cost(ax) + _rational_cognitive_cost(bx)
+                    total_diff += _rational_cognitive_cost(ay) + _rational_cognitive_cost(by)
             enonce+="\\end{enumerate}\n"; corrige+="\\end{enumerate}\n"
+
         ncl=config.get('nb_colin',2)
         if ncl>0:
             ne+=1
             enonce+=f"\\medskip\n\\noindent\\textbf{{{ne})}} Les vecteurs ${vect_u('u')}$ et ${vect_u('v')}$ sont-ils colinéaires ?\n\\begin{{enumerate}}\n"
             corrige+=f"\\textbf{{{ne})}}\n\\begin{{enumerate}}\n"
             for _ in range(ncl):
-                ux,uy=random.randint(-5,5),random.randint(-5,5)
-                while ux==0 and uy==0: ux,uy=random.randint(-5,5),random.randint(-5,5)
-                if random.random()<0.5:
-                    k=random.choice([j for j in range(-3,4) if j!=0]); vx,vy=k*ux,k*uy; rep="Oui"
+                if use_frac:
+                    ux,uy = _rand_coord(), _rand_coord()
+                    while ux==0 and uy==0: ux,uy = _rand_coord(), _rand_coord()
+                    if random.random()<0.5:
+                        k = Rational(random.choice([j for j in range(-3,4) if j!=0]))
+                        vx,vy = k*ux, k*uy; rep="Oui"
+                    else:
+                        vx,vy = _rand_coord(), _rand_coord()
+                        if ux*vy - uy*vx == 0: vy = vy + Rational(1,2)
+                        rep="Non"
+                    det = ux*vy - uy*vx
+                    ux_s,uy_s = _fmt_coord(ux),_fmt_coord(uy)
+                    vx_s,vy_s = _fmt_coord(vx),_fmt_coord(vy)
+                    det_s = _fmt_rational(det)
+                    enonce+=f"\\item ${vect_u('u')}({ux_s}\\,;\\,{uy_s})$ et ${vect_u('v')}({vx_s}\\,;\\,{vy_s})$\n"
+                    corrige+=f"\\item $\\det({vect_u('u')},{vect_u('v')}) = ({ux_s})\\times({vy_s}) - ({uy_s})\\times({vx_s}) = {det_s}$. {rep}.\n"
+                    total_diff += 3.0 + _rational_cognitive_cost(ux) + _rational_cognitive_cost(uy) + 1.0
                 else:
-                    vx,vy=random.randint(-5,5),random.randint(-5,5)
-                    if ux*vy-uy*vx==0: vy+=1
-                    rep="Non"
-                det=ux*vy-uy*vx
-                enonce+=f"\\item ${vect_u('u')}({ux}\\,;\\,{uy})$ et ${vect_u('v')}({vx}\\,;\\,{vy})$\n"
-                corrige+=f"\\item $\\det({vect_u('u')},{vect_u('v')}) = {ux}\\times({vy})-({uy})\\times{vx} = {det}$. {rep}.\n"
-                total_diff += 3.0 + _multiplication_weight(ux,vy) + _multiplication_weight(uy,vx) + _addition_weight(abs(ux*vy),abs(uy*vx))
+                    ux,uy=random.randint(-5,5),random.randint(-5,5)
+                    while ux==0 and uy==0: ux,uy=random.randint(-5,5),random.randint(-5,5)
+                    if random.random()<0.5:
+                        k=random.choice([j for j in range(-3,4) if j!=0]); vx,vy=k*ux,k*uy; rep="Oui"
+                    else:
+                        vx,vy=random.randint(-5,5),random.randint(-5,5)
+                        if ux*vy-uy*vx==0: vy+=1
+                        rep="Non"
+                    det=ux*vy-uy*vx
+                    enonce+=f"\\item ${vect_u('u')}({ux}\\,;\\,{uy})$ et ${vect_u('v')}({vx}\\,;\\,{vy})$\n"
+                    corrige+=f"\\item $\\det({vect_u('u')},{vect_u('v')}) = {ux}\\times({vy})-({uy})\\times{vx} = {det}$. {rep}.\n"
+                    total_diff += 3.0 + _multiplication_weight(ux,vy) + _multiplication_weight(uy,vx) + _addition_weight(abs(ux*vy),abs(uy*vx))
             enonce+="\\end{enumerate}\n"; corrige+="\\end{enumerate}\n"
+
         enonce = "\\noindent\\textbf{Exercice} -- Vecteurs et coordonnées.\\\\\n\\medskip\n" + enonce
         return {'enonce':enonce,'corrige':corrige,'corrige_succinct':corrige,'qr_data':None,
                 'difficulte':config.get('difficulte','Moyen'),
@@ -1809,7 +2533,7 @@ class FonctionsReference2nde(ExerciseGenerator):
 _DIFFICULTY_STATS_FILE = os.path.join(os.path.dirname(__file__), "difficulty_stats.json")
 _DIFFICULTY_STATS_CACHE = None
 _DIFFICULTY_CACHE_FORMAT_VERSION = 3
-_DIFFICULTY_ESTIMATOR_VERSION = 7  # v7: rigueur pédagogique corrigés — séparation étapes ⟺, S={}
+_DIFFICULTY_ESTIMATOR_VERSION = 8  # v8: option « avec fractions » sur Distributivite5e, Reduction3e, Equations3e, Vecteurs2nde
 _DIFFICULTY_MIN_SIGMA = 1.0
 
 

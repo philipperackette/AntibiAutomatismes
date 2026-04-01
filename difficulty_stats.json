@@ -1,350 +1,494 @@
 {
   "_meta": {
-    "estimator_version": 6,
+    "estimator_version": 8,
     "format_version": 3,
-    "updated_at": "2026-03-19T20:50:13"
+    "updated_at": "2026-04-01T21:38:14"
   },
   "stats": {
-    "{\"config\": {\"avec_parentheses\": \"Oui\", \"nb_questions\": 6}, \"estimator_version\": 6, \"generator_id\": \"priorites_5e\", \"profile_version\": 1}": {
+    "{\"config\": {\"avec_abs\": \"Mélange\", \"nb_questions\": 5}, \"estimator_version\": 8, \"generator_id\": \"intervalles_abs_2nde\", \"profile_version\": 1}": {
       "config": {
+        "avec_abs": "Mélange",
+        "nb_questions": 5
+      },
+      "estimator_version": 8,
+      "generator_id": "intervalles_abs_2nde",
+      "generator_name": "Intervalles et valeur absolue",
+      "max": 17.8,
+      "mean": 16.0525,
+      "min": 13.8,
+      "n": 200,
+      "niveau": "2nde",
+      "raw_sum": 3210.5,
+      "raw_sum_sq": 51674.55,
+      "sigma": 0.830659,
+      "sigma_effective": 1.0,
+      "updated_at": "2026-04-01T21:37:35"
+    },
+    "{\"config\": {\"avec_fractions\": \"Oui\", \"avec_parentheses\": \"Oui\", \"nb_questions\": 6}, \"estimator_version\": 8, \"generator_id\": \"priorites_5e\", \"profile_version\": 1}": {
+      "config": {
+        "avec_fractions": "Oui",
         "avec_parentheses": "Oui",
         "nb_questions": 6
       },
-      "estimator_version": 6,
+      "estimator_version": 8,
       "generator_id": "priorites_5e",
       "generator_name": "Priorités opératoires",
-      "max": 20.3,
-      "mean": 14.695,
-      "min": 10.8,
-      "n": 180,
+      "max": 18.1,
+      "mean": 16.3215,
+      "min": 14.0,
+      "n": 200,
       "niveau": "5e",
-      "raw_sum": 2645.1,
-      "raw_sum_sq": 39455.87,
-      "sigma": 1.804509,
-      "sigma_effective": 1.804509,
-      "updated_at": "2026-03-19T20:49:22"
+      "raw_sum": 3264.3,
+      "raw_sum_sq": 53400.77,
+      "sigma": 0.782616,
+      "sigma_effective": 1.0,
+      "updated_at": "2026-04-01T21:37:17"
     },
-    "{\"config\": {\"avec_soustractions\": \"Mélange\", \"nb_questions\": 8, \"nb_termes\": 3, \"valeur_max\": 20}, \"estimator_version\": 6, \"generator_id\": \"relatifs_somme_5e\", \"profile_version\": 1}": {
+    "{\"config\": {\"avec_fractions\": \"Oui\", \"nb_colin\": 2, \"nb_coord\": 3, \"nb_milieu\": 2}, \"estimator_version\": 8, \"generator_id\": \"vecteurs_2nde\", \"profile_version\": 1}": {
+      "config": {
+        "avec_fractions": "Oui",
+        "nb_colin": 2,
+        "nb_coord": 3,
+        "nb_milieu": 2
+      },
+      "estimator_version": 8,
+      "generator_id": "vecteurs_2nde",
+      "generator_name": "Vecteurs — coordonnées",
+      "max": 46.0,
+      "mean": 43.894,
+      "min": 41.8,
+      "n": 200,
+      "niveau": "2nde",
+      "raw_sum": 8778.8,
+      "raw_sum_sq": 385435.64,
+      "sigma": 0.703537,
+      "sigma_effective": 1.0,
+      "updated_at": "2026-04-01T21:38:14"
+    },
+    "{\"config\": {\"avec_fractions\": \"Oui\", \"nb_developper\": 4, \"nb_factoriser\": 4}, \"estimator_version\": 8, \"generator_id\": \"distributivite_5e\", \"profile_version\": 1}": {
+      "config": {
+        "avec_fractions": "Oui",
+        "nb_developper": 4,
+        "nb_factoriser": 4
+      },
+      "estimator_version": 8,
+      "generator_id": "distributivite_5e",
+      "generator_name": "Distributivité simple",
+      "max": 35.4,
+      "mean": 28.5825,
+      "min": 21.4,
+      "n": 200,
+      "niveau": "5e",
+      "raw_sum": 5716.5,
+      "raw_sum_sq": 164696.59,
+      "sigma": 2.554142,
+      "sigma_effective": 2.554142,
+      "updated_at": "2026-04-01T21:37:17"
+    },
+    "{\"config\": {\"avec_fractions\": \"Oui\", \"nb_questions\": 2, \"niveau_max\": 4}, \"estimator_version\": 8, \"generator_id\": \"inequations_2nde\", \"profile_version\": 1}": {
+      "config": {
+        "avec_fractions": "Oui",
+        "nb_questions": 2,
+        "niveau_max": 4
+      },
+      "estimator_version": 8,
+      "generator_id": "inequations_2nde",
+      "generator_name": "Inéquations du 1er degré",
+      "max": 18.0,
+      "mean": 16.517222,
+      "min": 14.8,
+      "n": 180,
+      "niveau": "2nde",
+      "raw_sum": 2973.1,
+      "raw_sum_sq": 49208.09,
+      "sigma": 0.748096,
+      "sigma_effective": 1.0,
+      "updated_at": "2026-04-01T13:33:50"
+    },
+    "{\"config\": {\"avec_fractions\": \"Oui\", \"nb_questions\": 2}, \"estimator_version\": 8, \"generator_id\": \"equations_produit_3e\", \"profile_version\": 1}": {
+      "config": {
+        "avec_fractions": "Oui",
+        "nb_questions": 2
+      },
+      "estimator_version": 8,
+      "generator_id": "equations_produit_3e",
+      "generator_name": "Équations produit",
+      "max": 12.8,
+      "mean": 12.205,
+      "min": 11.6,
+      "n": 180,
+      "niveau": "3e",
+      "raw_sum": 2196.9,
+      "raw_sum_sq": 26827.47,
+      "sigma": 0.281913,
+      "sigma_effective": 1.0,
+      "updated_at": "2026-04-01T13:33:45"
+    },
+    "{\"config\": {\"avec_fractions\": \"Oui\", \"nb_questions\": 3, \"niveau\": \"Complet (ax+b=cx+d)\"}, \"estimator_version\": 8, \"generator_id\": \"equations_3e\", \"profile_version\": 1}": {
+      "config": {
+        "avec_fractions": "Oui",
+        "nb_questions": 3,
+        "niveau": "Complet (ax+b=cx+d)"
+      },
+      "estimator_version": 8,
+      "generator_id": "equations_3e",
+      "generator_name": "Équations du 1er degré",
+      "max": 26.1,
+      "mean": 24.936667,
+      "min": 23.7,
+      "n": 180,
+      "niveau": "3e",
+      "raw_sum": 4488.6,
+      "raw_sum_sq": 111973.32,
+      "sigma": 0.486473,
+      "sigma_effective": 1.0,
+      "updated_at": "2026-04-01T13:33:45"
+    },
+    "{\"config\": {\"avec_fractions\": \"Oui\", \"nb_questions\": 3}, \"estimator_version\": 8, \"generator_id\": \"reduction_3e\", \"profile_version\": 1}": {
+      "config": {
+        "avec_fractions": "Oui",
+        "nb_questions": 3
+      },
+      "estimator_version": 8,
+      "generator_id": "reduction_3e",
+      "generator_name": "Réduction d'expressions",
+      "max": 28.5,
+      "mean": 23.743333,
+      "min": 19.5,
+      "n": 180,
+      "niveau": "3e",
+      "raw_sum": 4273.8,
+      "raw_sum_sq": 102155.76,
+      "sigma": 1.945796,
+      "sigma_effective": 1.945796,
+      "updated_at": "2026-04-01T13:33:45"
+    },
+    "{\"config\": {\"avec_fractions\": \"Oui\", \"nb_questions\": 4}, \"estimator_version\": 8, \"generator_id\": \"equations_produit_3e\", \"profile_version\": 1}": {
+      "config": {
+        "avec_fractions": "Oui",
+        "nb_questions": 4
+      },
+      "estimator_version": 8,
+      "generator_id": "equations_produit_3e",
+      "generator_name": "Équations produit",
+      "max": 25.6,
+      "mean": 24.3865,
+      "min": 23.2,
+      "n": 200,
+      "niveau": "3e",
+      "raw_sum": 4877.3,
+      "raw_sum_sq": 118972.73,
+      "sigma": 0.402825,
+      "sigma_effective": 1.0,
+      "updated_at": "2026-04-01T21:37:34"
+    },
+    "{\"config\": {\"avec_fractions\": \"Oui\", \"nb_questions\": 5, \"niveau\": \"Progressif\"}, \"estimator_version\": 8, \"generator_id\": \"equations_3e\", \"profile_version\": 1}": {
+      "config": {
+        "avec_fractions": "Oui",
+        "nb_questions": 5,
+        "niveau": "Progressif"
+      },
+      "estimator_version": 8,
+      "generator_id": "equations_3e",
+      "generator_name": "Équations du 1er degré",
+      "max": 36.0,
+      "mean": 34.1625,
+      "min": 32.7,
+      "n": 200,
+      "niveau": "3e",
+      "raw_sum": 6832.5,
+      "raw_sum_sq": 233491.05,
+      "sigma": 0.615503,
+      "sigma_effective": 1.0,
+      "updated_at": "2026-04-01T21:37:34"
+    },
+    "{\"config\": {\"avec_fractions\": \"Oui\", \"nb_questions\": 5}, \"estimator_version\": 8, \"generator_id\": \"reduction_3e\", \"profile_version\": 1}": {
+      "config": {
+        "avec_fractions": "Oui",
+        "nb_questions": 5
+      },
+      "estimator_version": 8,
+      "generator_id": "reduction_3e",
+      "generator_name": "Réduction d'expressions",
+      "max": 45.3,
+      "mean": 38.6655,
+      "min": 31.2,
+      "n": 200,
+      "niveau": "3e",
+      "raw_sum": 7733.1,
+      "raw_sum_sq": 300312.09,
+      "sigma": 2.557256,
+      "sigma_effective": 2.557256,
+      "updated_at": "2026-04-01T21:37:18"
+    },
+    "{\"config\": {\"avec_fractions\": \"Oui\", \"nb_questions\": 6, \"nb_simples\": 2}, \"estimator_version\": 8, \"generator_id\": \"developpement_3e\", \"profile_version\": 1}": {
+      "config": {
+        "avec_fractions": "Oui",
+        "nb_questions": 6,
+        "nb_simples": 2
+      },
+      "estimator_version": 8,
+      "generator_id": "developpement_3e",
+      "generator_name": "Développement",
+      "max": 46.2,
+      "mean": 40.85,
+      "min": 36.1,
+      "n": 200,
+      "niveau": "3e",
+      "raw_sum": 8170.0,
+      "raw_sum_sq": 334264.64,
+      "sigma": 1.612669,
+      "sigma_effective": 1.612669,
+      "updated_at": "2026-04-01T21:37:18"
+    },
+    "{\"config\": {\"avec_fractions\": \"Oui\", \"nb_questions\": 6, \"niveau_max\": 3}, \"estimator_version\": 8, \"generator_id\": \"inequations_2nde\", \"profile_version\": 1}": {
+      "config": {
+        "avec_fractions": "Oui",
+        "nb_questions": 6,
+        "niveau_max": 3
+      },
+      "estimator_version": 8,
+      "generator_id": "inequations_2nde",
+      "generator_name": "Inéquations du 1er degré",
+      "max": 49.1,
+      "mean": 45.738,
+      "min": 41.4,
+      "n": 200,
+      "niveau": "2nde",
+      "raw_sum": 9147.6,
+      "raw_sum_sq": 418738.58,
+      "sigma": 1.314632,
+      "sigma_effective": 1.314632,
+      "updated_at": "2026-04-01T21:37:51"
+    },
+    "{\"config\": {\"avec_soustractions\": \"Mélange\", \"nb_questions\": 8, \"nb_termes\": 3, \"valeur_max\": 20}, \"estimator_version\": 8, \"generator_id\": \"relatifs_somme_5e\", \"profile_version\": 1}": {
       "config": {
         "avec_soustractions": "Mélange",
         "nb_questions": 8,
         "nb_termes": 3,
         "valeur_max": 20
       },
-      "estimator_version": 6,
+      "estimator_version": 8,
       "generator_id": "relatifs_somme_5e",
       "generator_name": "Sommes de relatifs",
-      "max": 26.5,
-      "mean": 22.495556,
-      "min": 17.6,
-      "n": 180,
+      "max": 27.2,
+      "mean": 22.383,
+      "min": 17.7,
+      "n": 200,
       "niveau": "5e",
-      "raw_sum": 4049.2,
-      "raw_sum_sq": 91644.22,
-      "sigma": 1.756285,
-      "sigma_effective": 1.756285,
-      "updated_at": "2026-03-19T20:49:22"
+      "raw_sum": 4476.6,
+      "raw_sum_sq": 100693.94,
+      "sigma": 1.571945,
+      "sigma_effective": 1.571945,
+      "updated_at": "2026-04-01T21:37:17"
     },
-    "{\"config\": {\"nb_binome\": 1, \"nb_combiner\": 2, \"nb_radicaux\": 1, \"nb_simplifier\": 2}, \"estimator_version\": 6, \"generator_id\": \"racines_2nde\", \"profile_version\": 1}": {
+    "{\"config\": {\"fonctions\": \"Mixte\", \"nb_questions\": 5}, \"estimator_version\": 8, \"generator_id\": \"fonctions_ref_2nde\", \"profile_version\": 1}": {
+      "config": {
+        "fonctions": "Mixte",
+        "nb_questions": 5
+      },
+      "estimator_version": 8,
+      "generator_id": "fonctions_ref_2nde",
+      "generator_name": "Fonctions de référence",
+      "max": 21.3,
+      "mean": 16.5925,
+      "min": 11.0,
+      "n": 200,
+      "niveau": "2nde",
+      "raw_sum": 3318.5,
+      "raw_sum_sq": 55834.85,
+      "sigma": 1.965501,
+      "sigma_effective": 1.965501,
+      "updated_at": "2026-04-01T21:37:35"
+    },
+    "{\"config\": {\"nb_binome\": 1, \"nb_combiner\": 2, \"nb_radicaux\": 1, \"nb_simplifier\": 2}, \"estimator_version\": 8, \"generator_id\": \"racines_2nde\", \"profile_version\": 1}": {
       "config": {
         "nb_binome": 1,
         "nb_combiner": 2,
         "nb_radicaux": 1,
         "nb_simplifier": 2
       },
-      "estimator_version": 6,
+      "estimator_version": 8,
       "generator_id": "racines_2nde",
       "generator_name": "Racines carrées",
-      "max": 36.3,
-      "mean": 31.984444,
-      "min": 28.1,
-      "n": 180,
+      "max": 36.7,
+      "mean": 31.81,
+      "min": 26.7,
+      "n": 200,
       "niveau": "2nde",
-      "raw_sum": 5757.2,
-      "raw_sum_sq": 184645.54,
-      "sigma": 1.674476,
-      "sigma_effective": 1.674476,
-      "updated_at": "2026-03-19T20:50:13"
+      "raw_sum": 6362.0,
+      "raw_sum_sq": 203033.54,
+      "sigma": 1.814277,
+      "sigma_effective": 1.814277,
+      "updated_at": "2026-04-01T21:38:14"
     },
-    "{\"config\": {\"nb_colin\": 2, \"nb_coord\": 3, \"nb_milieu\": 2}, \"estimator_version\": 6, \"generator_id\": \"vecteurs_2nde\", \"profile_version\": 1}": {
-      "config": {
-        "nb_colin": 2,
-        "nb_coord": 3,
-        "nb_milieu": 2
-      },
-      "estimator_version": 6,
-      "generator_id": "vecteurs_2nde",
-      "generator_name": "Vecteurs — coordonnées",
-      "max": 23.8,
-      "mean": 21.602222,
-      "min": 20.5,
-      "n": 180,
-      "niveau": "2nde",
-      "raw_sum": 3888.4,
-      "raw_sum_sq": 84069.42,
-      "sigma": 0.629546,
-      "sigma_effective": 1.0,
-      "updated_at": "2026-03-19T20:50:13"
-    },
-    "{\"config\": {\"nb_developper\": 4, \"nb_factoriser\": 4}, \"estimator_version\": 6, \"generator_id\": \"distributivite_5e\", \"profile_version\": 1}": {
-      "config": {
-        "nb_developper": 4,
-        "nb_factoriser": 4
-      },
-      "estimator_version": 6,
-      "generator_id": "distributivite_5e",
-      "generator_name": "Distributivité simple",
-      "max": 31.7,
-      "mean": 24.871667,
-      "min": 18.9,
-      "n": 180,
-      "niveau": "5e",
-      "raw_sum": 4476.9,
-      "raw_sum_sq": 112430.51,
-      "sigma": 2.452375,
-      "sigma_effective": 2.452375,
-      "updated_at": "2026-03-19T20:49:22"
-    },
-    "{\"config\": {\"nb_eq_2pts\": 3, \"nb_intersection\": 2}, \"estimator_version\": 6, \"generator_id\": \"droites_2nde\", \"profile_version\": 1}": {
+    "{\"config\": {\"nb_eq_2pts\": 3, \"nb_intersection\": 2}, \"estimator_version\": 8, \"generator_id\": \"droites_2nde\", \"profile_version\": 1}": {
       "config": {
         "nb_eq_2pts": 3,
         "nb_intersection": 2
       },
-      "estimator_version": 6,
+      "estimator_version": 8,
       "generator_id": "droites_2nde",
       "generator_name": "Équations de droites",
       "max": 29.6,
-      "mean": 23.582778,
+      "mean": 23.0265,
       "min": 15.0,
+      "n": 200,
+      "niveau": "2nde",
+      "raw_sum": 4605.3,
+      "raw_sum_sq": 109993.67,
+      "sigma": 4.443945,
+      "sigma_effective": 4.443945,
+      "updated_at": "2026-04-01T21:38:14"
+    },
+    "{\"config\": {\"nb_imbriquee\": 1, \"nb_prod_diff\": 1, \"nb_somme\": 1}, \"estimator_version\": 8, \"generator_id\": \"fractions_2nde\", \"profile_version\": 1}": {
+      "config": {
+        "nb_imbriquee": 1,
+        "nb_prod_diff": 1,
+        "nb_somme": 1
+      },
+      "estimator_version": 8,
+      "generator_id": "fractions_2nde",
+      "generator_name": "Calcul fractionnaire",
+      "max": 19.1,
+      "mean": 16.594444,
+      "min": 14.3,
       "n": 180,
       "niveau": "2nde",
-      "raw_sum": 4244.9,
-      "raw_sum_sq": 103904.51,
-      "sigma": 4.593459,
-      "sigma_effective": 4.593459,
-      "updated_at": "2026-03-19T20:50:13"
+      "raw_sum": 2987.0,
+      "raw_sum_sq": 49778.24,
+      "sigma": 1.081754,
+      "sigma_effective": 1.081754,
+      "updated_at": "2026-04-01T13:33:45"
     },
-    "{\"config\": {\"nb_imbriquee\": 1, \"nb_prod_diff\": 2, \"nb_somme\": 2}, \"estimator_version\": 6, \"generator_id\": \"fractions_2nde\", \"profile_version\": 1}": {
+    "{\"config\": {\"nb_imbriquee\": 1, \"nb_prod_diff\": 2, \"nb_somme\": 2}, \"estimator_version\": 8, \"generator_id\": \"fractions_2nde\", \"profile_version\": 1}": {
       "config": {
         "nb_imbriquee": 1,
         "nb_prod_diff": 2,
         "nb_somme": 2
       },
-      "estimator_version": 6,
+      "estimator_version": 8,
       "generator_id": "fractions_2nde",
       "generator_name": "Calcul fractionnaire",
-      "max": 30.7,
-      "mean": 27.2,
-      "min": 23.0,
-      "n": 180,
+      "max": 30.4,
+      "mean": 27.2495,
+      "min": 24.0,
+      "n": 200,
       "niveau": "2nde",
-      "raw_sum": 4896.0,
-      "raw_sum_sq": 133584.98,
-      "sigma": 1.516172,
-      "sigma_effective": 1.516172,
-      "updated_at": "2026-03-19T20:49:38"
+      "raw_sum": 5449.9,
+      "raw_sum_sq": 148877.83,
+      "sigma": 1.36158,
+      "sigma_effective": 1.36158,
+      "updated_at": "2026-04-01T21:37:34"
     },
-    "{\"config\": {\"nb_questions\": 3, \"types\": \"Mixte\"}, \"estimator_version\": 6, \"generator_id\": \"identites_remarquables_2nde\", \"profile_version\": 1}": {
+    "{\"config\": {\"nb_questions\": 3, \"types\": \"Mixte\"}, \"estimator_version\": 8, \"generator_id\": \"identites_remarquables_2nde\", \"profile_version\": 1}": {
       "config": {
         "nb_questions": 3,
         "types": "Mixte"
       },
-      "estimator_version": 6,
+      "estimator_version": 8,
       "generator_id": "identites_remarquables_2nde",
       "generator_name": "Identités remarquables",
       "max": 14.0,
-      "mean": 12.4,
+      "mean": 12.3875,
       "min": 11.0,
-      "n": 180,
+      "n": 200,
       "niveau": "2nde",
-      "raw_sum": 2232.0,
-      "raw_sum_sq": 27895.5,
-      "sigma": 1.10227,
-      "sigma_effective": 1.10227,
-      "updated_at": "2026-03-19T20:49:38"
+      "raw_sum": 2477.5,
+      "raw_sum_sq": 30901.25,
+      "sigma": 1.027664,
+      "sigma_effective": 1.027664,
+      "updated_at": "2026-04-01T21:37:35"
     },
-    "{\"config\": {\"nb_questions\": 3}, \"estimator_version\": 6, \"generator_id\": \"factorisation_commun_2nde\", \"profile_version\": 1}": {
+    "{\"config\": {\"nb_questions\": 3}, \"estimator_version\": 8, \"generator_id\": \"factorisation_commun_2nde\", \"profile_version\": 1}": {
       "config": {
         "nb_questions": 3
       },
-      "estimator_version": 6,
+      "estimator_version": 8,
       "generator_id": "factorisation_commun_2nde",
       "generator_name": "Factorisation par facteur commun",
       "max": 16.8,
-      "mean": 16.061111,
+      "mean": 16.0725,
       "min": 15.3,
-      "n": 180,
+      "n": 200,
       "niveau": "2nde",
-      "raw_sum": 2891.0,
-      "raw_sum_sq": 46465.4,
-      "sigma": 0.426405,
+      "raw_sum": 3214.5,
+      "raw_sum_sq": 51703.95,
+      "sigma": 0.441014,
       "sigma_effective": 1.0,
-      "updated_at": "2026-03-19T20:49:38"
+      "updated_at": "2026-04-01T21:37:35"
     },
-    "{\"config\": {\"nb_questions\": 4}, \"estimator_version\": 6, \"generator_id\": \"equations_produit_3e\", \"profile_version\": 1}": {
+    "{\"config\": {\"nb_questions\": 4}, \"estimator_version\": 8, \"generator_id\": \"puissances_2nde\", \"profile_version\": 1}": {
       "config": {
         "nb_questions": 4
       },
-      "estimator_version": 6,
-      "generator_id": "equations_produit_3e",
-      "generator_name": "Équations produit",
-      "max": 21.6,
-      "mean": 18.946667,
-      "min": 16.8,
-      "n": 180,
-      "niveau": "3e",
-      "raw_sum": 3410.4,
-      "raw_sum_sq": 64727.7,
-      "sigma": 0.788768,
-      "sigma_effective": 1.0,
-      "updated_at": "2026-03-19T20:49:38"
-    },
-    "{\"config\": {\"nb_questions\": 4}, \"estimator_version\": 6, \"generator_id\": \"puissances_2nde\", \"profile_version\": 1}": {
-      "config": {
-        "nb_questions": 4
-      },
-      "estimator_version": 6,
+      "estimator_version": 8,
       "generator_id": "puissances_2nde",
       "generator_name": "Puissances de 10",
-      "max": 14.2,
-      "mean": 12.535556,
-      "min": 11.0,
-      "n": 180,
+      "max": 14.5,
+      "mean": 12.5105,
+      "min": 10.8,
+      "n": 200,
       "niveau": "2nde",
-      "raw_sum": 2256.4,
-      "raw_sum_sq": 28367.24,
-      "sigma": 0.675,
+      "raw_sum": 2502.1,
+      "raw_sum_sq": 31399.95,
+      "sigma": 0.697954,
       "sigma_effective": 1.0,
-      "updated_at": "2026-03-19T20:50:12"
+      "updated_at": "2026-04-01T21:38:12"
     },
-    "{\"config\": {\"nb_questions\": 4}, \"estimator_version\": 6, \"generator_id\": \"pythagore_3e\", \"profile_version\": 1}": {
+    "{\"config\": {\"nb_questions\": 4}, \"estimator_version\": 8, \"generator_id\": \"pythagore_3e\", \"profile_version\": 1}": {
       "config": {
         "nb_questions": 4
       },
-      "estimator_version": 6,
+      "estimator_version": 8,
       "generator_id": "pythagore_3e",
       "generator_name": "Théorème de Pythagore",
-      "max": 38.7,
-      "mean": 34.075556,
+      "max": 38.0,
+      "mean": 33.701,
       "min": 28.6,
-      "n": 180,
+      "n": 200,
       "niveau": "3e",
-      "raw_sum": 6133.6,
-      "raw_sum_sq": 209680.52,
-      "sigma": 1.93605,
-      "sigma_effective": 1.93605,
-      "updated_at": "2026-03-19T20:49:23"
+      "raw_sum": 6740.2,
+      "raw_sum_sq": 227969.66,
+      "sigma": 2.022597,
+      "sigma_effective": 2.022597,
+      "updated_at": "2026-04-01T21:37:18"
     },
-    "{\"config\": {\"nb_questions\": 4}, \"estimator_version\": 6, \"generator_id\": \"tableau_signes_2nde\", \"profile_version\": 1}": {
+    "{\"config\": {\"nb_questions\": 4}, \"estimator_version\": 8, \"generator_id\": \"tableau_signes_2nde\", \"profile_version\": 1}": {
       "config": {
         "nb_questions": 4
       },
-      "estimator_version": 6,
+      "estimator_version": 8,
       "generator_id": "tableau_signes_2nde",
       "generator_name": "Inéquations produit/quotient",
-      "max": 39.0,
-      "mean": 35.214444,
+      "max": 39.2,
+      "mean": 35.4385,
       "min": 31.9,
-      "n": 180,
+      "n": 200,
       "niveau": "2nde",
-      "raw_sum": 6338.6,
-      "raw_sum_sq": 223679.94,
-      "sigma": 1.615313,
-      "sigma_effective": 1.615313,
-      "updated_at": "2026-03-19T20:50:12"
+      "raw_sum": 7087.7,
+      "raw_sum_sq": 251668.31,
+      "sigma": 1.56661,
+      "sigma_effective": 1.56661,
+      "updated_at": "2026-04-01T21:38:12"
     },
-    "{\"config\": {\"nb_questions\": 4}, \"estimator_version\": 6, \"generator_id\": \"thales_3e\", \"profile_version\": 1}": {
+    "{\"config\": {\"nb_questions\": 4}, \"estimator_version\": 8, \"generator_id\": \"thales_3e\", \"profile_version\": 1}": {
       "config": {
         "nb_questions": 4
       },
-      "estimator_version": 6,
+      "estimator_version": 8,
       "generator_id": "thales_3e",
       "generator_name": "Théorème de Thalès",
       "max": 20.1,
-      "mean": 19.152222,
+      "mean": 19.0785,
       "min": 18.0,
-      "n": 180,
+      "n": 200,
       "niveau": "3e",
-      "raw_sum": 3447.4,
-      "raw_sum_sq": 66063.8,
-      "sigma": 0.462055,
+      "raw_sum": 3815.7,
+      "raw_sum_sq": 72844.81,
+      "sigma": 0.484652,
       "sigma_effective": 1.0,
-      "updated_at": "2026-03-19T20:49:37"
-    },
-    "{\"config\": {\"nb_questions\": 5, \"niveau\": \"Progressif\"}, \"estimator_version\": 6, \"generator_id\": \"equations_3e\", \"profile_version\": 1}": {
-      "config": {
-        "nb_questions": 5,
-        "niveau": "Progressif"
-      },
-      "estimator_version": 6,
-      "generator_id": "equations_3e",
-      "generator_name": "Équations du 1er degré",
-      "max": 29.3,
-      "mean": 27.358333,
-      "min": 25.0,
-      "n": 180,
-      "niveau": "3e",
-      "raw_sum": 4924.5,
-      "raw_sum_sq": 134857.59,
-      "sigma": 0.854652,
-      "sigma_effective": 1.0,
-      "updated_at": "2026-03-19T20:49:37"
-    },
-    "{\"config\": {\"nb_questions\": 5}, \"estimator_version\": 6, \"generator_id\": \"reduction_3e\", \"profile_version\": 1}": {
-      "config": {
-        "nb_questions": 5
-      },
-      "estimator_version": 6,
-      "generator_id": "reduction_3e",
-      "generator_name": "Réduction d'expressions",
-      "max": 24.2,
-      "mean": 18.786667,
-      "min": 13.7,
-      "n": 180,
-      "niveau": "3e",
-      "raw_sum": 3381.6,
-      "raw_sum_sq": 64551.36,
-      "sigma": 2.383238,
-      "sigma_effective": 2.383238,
-      "updated_at": "2026-03-19T20:49:22"
-    },
-    "{\"config\": {\"nb_questions\": 6, \"nb_simples\": 2}, \"estimator_version\": 6, \"generator_id\": \"developpement_3e\", \"profile_version\": 1}": {
-      "config": {
-        "nb_questions": 6,
-        "nb_simples": 2
-      },
-      "estimator_version": 6,
-      "generator_id": "developpement_3e",
-      "generator_name": "Développement",
-      "max": 46.9,
-      "mean": 38.151667,
-      "min": 32.5,
-      "n": 180,
-      "niveau": "3e",
-      "raw_sum": 6867.3,
-      "raw_sum_sq": 263243.67,
-      "sigma": 2.62967,
-      "sigma_effective": 2.62967,
-      "updated_at": "2026-03-19T20:49:22"
-    },
-    "{\"config\": {\"nb_questions\": 6, \"niveau_max\": 3}, \"estimator_version\": 6, \"generator_id\": \"inequations_2nde\", \"profile_version\": 1}": {
-      "config": {
-        "nb_questions": 6,
-        "niveau_max": 3
-      },
-      "estimator_version": 6,
-      "generator_id": "inequations_2nde",
-      "generator_name": "Inéquations du 1er degré",
-      "max": 33.0,
-      "mean": 30.477778,
-      "min": 27.0,
-      "n": 180,
-      "niveau": "2nde",
-      "raw_sum": 5486.0,
-      "raw_sum_sq": 167458.0,
-      "sigma": 1.19469,
-      "sigma_effective": 1.19469,
-      "updated_at": "2026-03-19T20:49:53"
+      "updated_at": "2026-04-01T21:37:34"
     }
   }
 }
