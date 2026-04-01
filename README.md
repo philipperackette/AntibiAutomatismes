@@ -66,6 +66,39 @@ Le dépôt est donc déjà exploitable, même s’il reste perfectible.
 
 ---
 
+## Démarrage rapide
+
+### 1. Installer la dépendance Python minimale
+
+```bash
+pip install sympy
+```
+
+### 2. Lancer l’application
+
+```bash
+python main.py
+```
+
+### 3. Générer un sujet
+
+Depuis l’interface :
+
+1. choisir un titre, une classe et un type de document ;
+2. ajouter des exercices depuis le catalogue ;
+3. configurer les exercices ;
+4. générer le fichier `sujet.tex`.
+
+### 4. Compiler le document
+
+```bash
+xelatex sujet.tex
+```
+
+En quelques minutes, on peut ainsi produire un premier sujet PDF.
+
+---
+
 ## Structure du dépôt
 
 ### Fichiers principaux
@@ -141,7 +174,115 @@ Le document obtenu peut ensuite être compilé en PDF avec XeLaTeX.
 - `sympy` ;
 - `tkinter` (souvent déjà inclus selon la distribution Python et le système).
 
-Installation minimale :
+---
+
+## Compilation LaTeX
+
+Le programme génère un fichier `sujet.tex`.
+
+Compilation recommandée :
 
 ```bash
-pip install sympy
+xelatex sujet.tex
+```
+
+Packages LaTeX utilisés par le projet :
+
+- `amsmath`
+- `lmodern`
+- `babel`
+- `geometry`
+- `pgf`
+- `tikz`
+- `tkz-tab`
+- `fancyhdr`
+- `qrcode`
+- `enumitem`
+- `datetime2`
+
+---
+
+## Presets et personnalisation
+
+Les compositions peuvent être sauvegardées puis rechargées au format JSON.
+
+Cela permet par exemple de :
+
+- réutiliser une structure de devoir d’une année sur l’autre ;
+- préparer plusieurs variantes d’un même chapitre ;
+- distinguer facilement des presets d’entraînement et d’évaluation.
+
+---
+
+## Gestion de la difficulté
+
+Le projet inclut un mécanisme de calibration fondé sur des statistiques de difficulté.
+
+L’objectif n’est pas de produire une mesure parfaite, mais d’aider à :
+
+- rapprocher plusieurs sujets d’un même niveau global ;
+- éviter des écarts trop importants entre variantes ;
+- conserver une meilleure homogénéité d’ensemble.
+
+---
+
+## Exemples
+
+Le dépôt contient un dossier `Exemples/` destiné à montrer le type de documents générés par le projet.
+
+Il peut servir de point d’entrée rapide pour comprendre le rendu concret avant même de lancer l’application.
+
+---
+
+## Ajouter un nouvel exercice
+
+L’architecture du projet repose sur un registre de générateurs dans `generators.py`.
+
+L’ajout d’un nouvel exercice suit l’idée générale suivante :
+
+- définir une nouvelle classe de générateur ;
+- lui donner un identifiant, un nom, un niveau et une description ;
+- définir les paramètres configurables ;
+- implémenter la génération de l’énoncé, du corrigé et des métadonnées utiles.
+
+L’exercice devient alors intégrable dans l’interface et dans la composition des sujets.
+
+---
+
+## Philosophie du projet
+
+AntibiAutomatismes ne cherche pas seulement à automatiser.
+
+Le projet défend aussi une certaine manière de concevoir l’évaluation :
+
+- entraîner sur des types d’exercices identifiés ;
+- évaluer sur des tâches réellement préparées ;
+- varier les données plutôt que changer subrepticement la nature des questions ;
+- conserver une exigence mathématique sans transformer l’évaluation en piège.
+
+---
+
+## Limites et pistes d’amélioration
+
+Le projet peut encore être amélioré sur plusieurs points :
+
+- enrichissement du catalogue ;
+- amélioration de la documentation ;
+- meilleure formalisation des statistiques de difficulté ;
+- ajout de tests automatiques ;
+- amélioration de l’export et du flux de compilation ;
+- ajout de captures d’écran ou d’exemples visuels plus complets dans le dépôt.
+
+---
+
+## Auteur
+
+Projet personnel de génération de sujets de mathématiques.
+
+---
+
+## Licence
+
+Le code source de ce projet est distribué sous licence MIT.
+
+La documentation, le README et les contenus pédagogiques associés sont distribués sous licence Creative Commons Attribution 4.0 International (CC BY 4.0).
