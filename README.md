@@ -1,11 +1,18 @@
 # AntibiAutomatismes
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 Générateur de sujets de mathématiques inspiré de la méthode d’André Antibi.
 
 Le projet a pour but de produire des feuilles d’entraînement et des évaluations composées d’exercices **proches de ceux déjà travaillés en classe**, avec une **structure familière** mais des **données différentes** selon les versions générées.
 
 L’idée générale est simple : automatiser la préparation de sujets sans perdre de vue la logique pédagogique.  
 L’élève doit être évalué sur des techniques réellement entraînées, et non sur des variations artificiellement déstabilisantes.
+
+
+## Aperçu
+
+![Interface AntibiAutomatismes](Exemples/interface.png)
 
 ---
 
